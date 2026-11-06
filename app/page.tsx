@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import InitialLoader from "@/app/components/InitialLoader";
+import Image from "next/image";
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
@@ -19,7 +20,16 @@ export default function Home() {
       <div className="site-shell">
         <header className="site-header">
           <a href="#inicio" className="brand">
-            <span className="brand-mark">CW</span>
+            <span className="brand-mark">
+                <Image
+                  src="/logodecarga.png"
+                  alt="Charlotte Wessels Argentina"
+                  width={55}
+                  height={55}
+                  className="brand-logo"
+                  priority
+                />
+            </span>
             <span className="brand-name">
               CHARLOTTE WESSELS
               <small>ARGENTINA · FAN COMMUNITY</small>
@@ -80,7 +90,13 @@ export default function Home() {
               <div className="orbit orbit-two" />
               <div className="orbit orbit-three" />
               <div className="orbit-center">
-                <span>CW</span>
+                <Image
+                  src="/logocentral.png"
+                  alt="Charlotte Wessels"
+                  width={150}
+                  height={150}
+                  className="central-logo"
+                />
                 <small>MUSIC · ART · SOUL</small>
               </div>
               <span className="decoration-label">EST. ARGENTINA</span>
