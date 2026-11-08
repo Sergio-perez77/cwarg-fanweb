@@ -1,9 +1,9 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import AdminLogoutButton from "../components/AdminLogoutButton";
-import link from "next/link";
 
 function DashboardLoading() {
   return (
@@ -49,65 +49,56 @@ async function DashboardContent() {
   }
 
   const sections = [
-  {
-    title: "Noticias",
-    description: "Crear y administrar publicaciones.",
-    icon: "✦",
-    href: "/admin/dashboard/news",
-    available: true,
-  },
-  {
-    title: "Discografía",
-    description: "Administrar álbumes y canciones.",
-    icon: "♫",
-    href: "/admin/dashboard/discography",
-    available: true,
-  },
-  {
-    title: "Multimedia",
-    description: "Gestionar fotografías y videos.",
-    icon: "▣",
-    href: "/admin/dashboard/multimedia",
-    available: true,
-  },
-  {
-    title: "Comentarios",
-    description: "Moderar comentarios de usuarios.",
-    icon: "☰",
-    href: "/admin/dashboard/comments",
-    available: true,
-  },
-  {
-    title: "Usuarios",
-    description: "Gestionar cuentas y permisos.",
-    icon: "♙",
-    href: "/admin/dashboard/users",
-    available: isSuperAdmin,
-  },
-  {
-    title: "Configuración",
-    description: "Administrar opciones del sitio.",
-    icon: "⚙",
-    href: "/admin/dashboard/settings",
-    available: isSuperAdmin,
-  },
-];
+    {
+      title: "Noticias",
+      description: "Crear y administrar publicaciones.",
+      icon: "✦",
+      href: "/admin/dashboard/news",
+      available: true,
+    },
+    {
+      title: "Discografía",
+      description: "Administrar álbumes y canciones.",
+      icon: "♫",
+      available: false,
+    },
+    {
+      title: "Multimedia",
+      description: "Gestionar fotografías y videos.",
+      icon: "▣",
+      available: false,
+    },
+    {
+      title: "Comentarios",
+      description: "Moderar comentarios de usuarios.",
+      icon: "☰",
+      available: false,
+    },
+    {
+      title: "Usuarios",
+      description: "Gestionar cuentas y permisos.",
+      icon: "♙",
+      available: isSuperAdmin,
+    },
+    {
+      title: "Configuración",
+      description: "Administrar opciones del sitio.",
+      icon: "⚙",
+      available: isSuperAdmin,
+    },
+  ];
 
   return (
     <main className="min-h-screen bg-[#080706] text-[#f8f3e5]">
       <div className="flex min-h-screen flex-col md:flex-row">
-
-        {/* SIDEBAR */}
         <aside className="w-full border-b border-[#d4af37]/20 bg-[#100e09] p-5 md:w-72 md:border-b-0 md:border-r md:p-6">
           <div className="mb-10">
             <p className="text-xs tracking-[0.3em] text-[#d4af37]">
               CHARLOTTE WESSELS
             </p>
-
             <h2 className="mt-2 text-xl font-semibold">
               Administración
             </h2>
-
             <p className="mt-2 text-xs text-[#a99e83]">
               Argentina · CMS
             </p>
@@ -122,20 +113,24 @@ async function DashboardContent() {
               Gestión de contenido
             </p>
 
+            <Link
+              href="/admin/dashboard/news"
+              className="block rounded-lg px-4 py-3 text-sm text-[#c7bda5] transition hover:bg-white/5 hover:text-[#d4af37]"
+            >
+              <span className="mr-3 text-[#d4af37]">✦</span>
+              Noticias
+            </Link>
+
             {sections
-              .filter((section) => section.available)
+              .filter((section) => !section.available && !["Usuarios", "Configuración"].includes(section.title))
               .map((section) => (
                 <div
                   key={section.title}
-                  className="rounded-lg px-4 py-3 text-sm text-[#c7bda5] transition hover:bg-white/5"
+                  className="rounded-lg px-4 py-3 text-sm text-[#766b54]"
                 >
-                  <span className="mr-3 text-[#d4af37]">
-                    {section.icon}
-                  </span>
+                  <span className="mr-3">{section.icon}</span>
                   {section.title}
-                  <span className="ml-2 text-xs text-[#766b54]">
-                    Próximamente
-                  </span>
+                  <span className="ml-2 text-xs">Próximamente</span>
                 </div>
               ))}
           </nav>
@@ -145,18 +140,13 @@ async function DashboardContent() {
           </div>
         </aside>
 
-        {/* CONTENIDO */}
         <section className="min-w-0 flex-1 p-6 md:p-10">
           <header className="mb-10 flex flex-col gap-5 border-b border-[#d4af37]/15 pb-8 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="mb-2 text-xs tracking-[0.25em] text-[#d4af37]">
                 PANEL DE CONTROL
               </p>
-
-              <h1 className="text-3xl font-semibold">
-                Dashboard
-              </h1>
-
+              <h1 className="text-3xl font-semibold">Dashboard</h1>
               <p className="mt-3 text-sm text-[#a99e83]">
                 Bienvenido/a al centro de administración.
               </p>
@@ -171,29 +161,23 @@ async function DashboardContent() {
             </div>
           </header>
 
-          {/* ESTADO */}
           <div className="mb-10 rounded-xl border border-[#d4af37]/20 bg-[#15120a] p-6">
             <p className="text-xs uppercase tracking-widest text-[#d4af37]">
               Estado del proyecto
             </p>
-
             <h2 className="mt-3 text-xl font-semibold">
               Estructura administrativa inicial
             </h2>
-
             <p className="mt-3 max-w-2xl text-sm leading-6 text-[#a99e83]">
-              El panel ya cuenta con autenticación y control de acceso.
-              Los módulos se habilitarán progresivamente para administrar
-              el contenido de la fanweb.
+              El panel cuenta con autenticación y control de acceso.
+              Los módulos se habilitarán progresivamente.
             </p>
           </div>
 
-          {/* MÓDULOS */}
           <div className="mb-6 flex items-center justify-between">
             <h2 className="text-xl font-semibold">
               Módulos administrativos
             </h2>
-
             <span className="text-xs text-[#a99e83]">
               {sections.filter((s) => s.available).length} módulos
             </span>
@@ -203,31 +187,28 @@ async function DashboardContent() {
             {sections
               .filter((section) => section.available)
               .map((section) => (
-                <link
+                <Link
                   key={section.title}
-                  href={section.href}
+                  href={section.href ?? "#"}
                   className="group rounded-xl border border-[#d4af37]/15 bg-[#100e09] p-6 transition hover:border-[#d4af37]/40 hover:bg-[#17130a]"
-                  >
+                >
                   <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-lg border border-[#d4af37]/20 bg-[#d4af37]/10 text-xl text-[#d4af37]">
                     {section.icon}
                   </div>
-
                   <h3 className="text-lg font-semibold">
                     {section.title}
                   </h3>
-
                   <p className="mt-2 min-h-10 text-sm leading-5 text-[#a99e83]">
                     {section.description}
                   </p>
-
                   <div className="mt-6 border-t border-[#d4af37]/10 pt-4">
                     <span className="text-xs text-[#d4af37]">
                       {section.title === "Noticias"
                         ? "Administrar noticias →"
-                        : "Próximamente →"}
+                        : "Próximamente"}
                     </span>
                   </div>
-                </link>
+                </Link>
               ))}
           </div>
 
