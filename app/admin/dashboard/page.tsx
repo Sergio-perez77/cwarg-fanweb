@@ -50,6 +50,13 @@ async function DashboardContent() {
 
   const sections = [
     {
+      title: "Integrantes",
+      description: "Administrar perfiles y biografías de The Obsession.",
+      icon: "♙",
+      href: "/admin/dashboard/integrantes",
+      available: true,
+    },
+    {
       title: "Noticias",
       description: "Crear y administrar publicaciones.",
       icon: "✦",
@@ -112,6 +119,14 @@ async function DashboardContent() {
             <p className="px-4 pt-5 text-xs uppercase tracking-widest text-[#766b54]">
               Gestión de contenido
             </p>
+
+            <Link
+                href="/admin/dashboard/integrantes"
+                className="block rounded-lg px-4 py-3 text-sm text-[#c7bda5] transition hover:bg-white/5 hover:text-[#d4af37]"
+              >
+                <span className="mr-3 text-[#d4af37]">♙</span>
+                Integrantes
+              </Link>
 
             <Link
               href="/admin/dashboard/news"
@@ -205,6 +220,8 @@ async function DashboardContent() {
                     <span className="text-xs text-[#d4af37]">
                       {section.title === "Noticias"
                         ? "Administrar noticias →"
+                        : section.title === "Integrantes"
+                        ? "Administrar integrantes →"
                         : "Próximamente"}
                     </span>
                   </div>
