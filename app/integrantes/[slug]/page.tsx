@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
+import MemberSignature from "@/app/components/MemberSignature";
 
 export const instant = false;
 
@@ -17,6 +18,7 @@ type BiographyBlock =
     };
 
 type BandMember = {
+  id: string;
   name: string;
   slug: string;
   photo_url: string | null;
@@ -79,7 +81,7 @@ export default async function MemberDetailPage({ params }: Props) {
 
   const { data, error } = await supabase
     .from("band_members")
-    .select("name, slug, photo_url, content")
+    .select("id, name, slug, photo_url, content")
     .eq("slug", slug)
     .eq("status", "published")
     .maybeSingle();
@@ -162,6 +164,7 @@ export default async function MemberDetailPage({ params }: Props) {
               );
             })}
           </div>
+          <MemberSignature memberId={member.id} />
         </article>
       </div>
     </main>
