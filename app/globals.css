@@ -1334,6 +1334,63 @@ a {
   }
 }
 
+/* BIOGRAFÍA - INTEGRANTES */
+
+.members-scroll {
+  display: flex;
+  gap: 25px;
+  margin-top: 40px;
+  padding: 5px 2px 20px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gold) transparent;
+}
+
+.member-card {
+  flex: 0 0 210px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  color: inherit;
+  text-decoration: none;
+  scroll-snap-align: start;
+}
+
+.member-card img,
+.member-photo-placeholder {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  object-position: center;
+  border: 1px solid var(--border);
+  background: #100e09;
+  transition: border-color 0.3s ease, transform 0.3s ease;
+}
+
+.member-photo-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold);
+  font-size: 11px;
+  letter-spacing: 2px;
+}
+
+.member-card:hover img,
+.member-card:hover .member-photo-placeholder {
+  border-color: var(--gold);
+  transform: translateY(-4px);
+}
+
+.member-card h3 {
+  margin: 0;
+  font-family: var(--font-cinzel), Georgia, serif;
+  font-size: 15px;
+  text-align: center;
+  letter-spacing: 1px;
+}
+
 
 
 

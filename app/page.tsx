@@ -124,6 +124,7 @@ useEffect(() => {
 
           <nav className="main-nav" aria-label="Navegación principal">
             <a href="#inicio">Inicio</a>
+            <a href="#biografia">Biografía</a>
             <a href="#noticias">Noticias</a>
             <a href="#musica">Música</a>
             <a href="#multimedia">Multimedia</a>
