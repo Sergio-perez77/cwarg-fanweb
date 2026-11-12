@@ -15,6 +15,13 @@ type NewsItem = {
   published_at: string | null;
 };
 
+type BandMemberPublic = {
+  id: string;
+  name: string;
+  slug: string;
+  photo_url: string | null;
+};
+
 const supabase = createClient();
 export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
@@ -22,6 +29,10 @@ export default function Home() {
   const [news, setNews] = useState<NewsItem[]>([]);
 const [isNewsLoading, setIsNewsLoading] = useState(true);
 const [newsError, setNewsError] = useState(false);
+
+const [members, setMembers] = useState<BandMemberPublic[]>([]);
+const [isMembersLoading, setIsMembersLoading] = useState(true);
+const [membersError, setMembersError] = useState(false);
 
 useEffect(() => {
   let isMounted = true;
@@ -51,6 +62,35 @@ useEffect(() => {
   return () => {
     isMounted = false;
   };
+  }, []);
+
+  useEffect(() => {
+  let isMounted = true;
+
+    async function loadPublishedMembers() {
+      const { data, error } = await supabase
+        .from("band_members")
+        .select("id, name, slug, photo_url")
+        .eq("status", "published")
+        .order("sort_order", { ascending: true });
+
+      if (!isMounted) return;
+
+      if (error) {
+        console.error("Error al cargar integrantes:", error.message);
+        setMembersError(true);
+      } else {
+        setMembers((data ?? []) as BandMemberPublic[]);
+      }
+
+      setIsMembersLoading(false);
+    }
+
+    void loadPublishedMembers();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleLoadingComplete = useCallback(() => {
@@ -163,13 +203,61 @@ useEffect(() => {
             </p>
           </section>
 
+
+          <section className="content-section" id="biografia">
+            <div className="section-heading">
+              <div>
+                <p className="eyebrow">THE OBSESSION</p>
+                <h2>INTEGRANTES</h2>
+              </div>
+              
+            </div>
+
+            {isMembersLoading ? (
+              <div className="empty-content">
+                <h3>CARGANDO INTEGRANTES</h3>
+              </div>
+            ) : membersError ? (
+              <div className="empty-content">
+                <h3>NO SE PUDIERON CARGAR LOS INTEGRANTES</h3>
+                <p>Intentá actualizar la página más tarde.</p>
+              </div>
+            ) : members.length === 0 ? (
+              <div className="empty-content">
+                <h3>PRÓXIMAMENTE</h3>
+                <p>Conocé a los integrantes de The Obsession.</p>
+              </div>
+            ) : (
+              <div className="members-scroll">
+                {members.map((member) => (
+                  <Link
+                    href={`/integrantes/${member.slug}`}
+                    className="member-card"
+                    key={member.id}
+                  >
+                    {member.photo_url ? (
+                      <img src={member.photo_url} alt={member.name} />
+                    ) : (
+                      <div className="member-photo-placeholder">
+                        THE OBSESSION
+                      </div>
+                    )}
+                    <h3>{member.name}</h3>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
+
+  
+
           <section className="content-section" id="noticias">
             <div className="section-heading">
               <div>
                 <p className="eyebrow">ACTUALIDAD</p>
                 <h2>ÚLTIMAS NOTICIAS</h2>
               </div>
-              <span className="section-number">01 / 04</span>
+              
             </div>
 
             {isNewsLoading ? (
@@ -238,7 +326,7 @@ useEffect(() => {
                 <p className="eyebrow">SU UNIVERSO MUSICAL</p>
                 <h2>DISCOGRAFÍA</h2>
               </div>
-              <span className="section-number">02 / 04</span>
+              
             </div>
 
             <div className="empty-content">
@@ -257,7 +345,7 @@ useEffect(() => {
                 <p className="eyebrow">EXPERIENCIAS</p>
                 <h2>MULTIMEDIA</h2>
               </div>
-              <span className="section-number">03 / 04</span>
+              
             </div>
 
             <div className="empty-content">
@@ -277,7 +365,7 @@ useEffect(() => {
               Una comunidad crece cuando las personas comparten lo que las
               emociona.
             </p>
-            <span className="community-label">04 / 04 · COMUNIDAD</span>
+            <span className="community-label"> COMUNIDAD</span>
           </section>
         </main>
 
