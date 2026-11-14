@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import TurnstileCaptcha from "@/app/components/TurnstileCaptcha";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -11,9 +12,14 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
+  const [captchaToken, setCaptchaToken] = useState("");
   async function handleLogin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (!captchaToken) {
+      setError("Completá la verificación de seguridad.");
+      return;
+    }
 
     setError("");
     setLoading(true);
@@ -24,6 +30,9 @@ export default function AdminLoginPage() {
       await supabase.auth.signInWithPassword({
         email,
         password,
+        options: {
+          captchaToken,
+        },
       });
 
     if (loginError || !data.user) {
@@ -124,6 +133,10 @@ export default function AdminLoginPage() {
             />
           </div>
 
+          <div className="flex justify-center">
+            <TurnstileCaptcha onVerify={setCaptchaToken} />
+          </div>
+
           {error && (
             <p className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
               {error}
@@ -132,7 +145,7 @@ export default function AdminLoginPage() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !captchaToken}
             className="w-full rounded-lg bg-[#d4af37] px-4 py-3 font-semibold text-black transition hover:bg-[#ffe680] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? "Ingresando..." : "Iniciar sesión"}
