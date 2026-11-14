@@ -64,7 +64,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md rounded-2xl border border-[#d4af37]/20 bg-[#15120a] p-8 shadow-2xl">
         <div className="mb-8 text-center">
           <p className="mb-3 text-sm tracking-[0.35em] text-[#d4af37]">
-            CHARLOTTE WESSELS
+            CHARLOTTE WESSELS ARGENTINA
           </p>
 
           <h1 className="text-3xl font-semibold text-[#f8f3e5]">
@@ -115,6 +115,15 @@ export default function LoginPage() {
               className="w-full rounded-lg border border-[#d4af37]/25 bg-black/40 px-4 py-3 text-white outline-none focus:border-[#d4af37]"
               placeholder="Tu contraseña"
             />
+          </div>
+
+          <div className="text-right">
+            <Link
+              href="/recuperar-password"
+              className="text-sm text-[#d4af37] transition hover:text-[#ffe680]"
+            >
+              ¿Olvidaste tu contraseña?
+            </Link>
           </div>
 
           <div className="flex justify-center">
