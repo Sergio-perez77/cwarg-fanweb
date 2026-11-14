@@ -79,7 +79,8 @@ async function DashboardContent() {
       title: "Comentarios",
       description: "Moderar comentarios de usuarios.",
       icon: "☰",
-      available: false,
+      href: "/admin/dashboard/comentarios",
+      available: true,
     },
     {
       title: "Usuarios",
@@ -134,6 +135,14 @@ async function DashboardContent() {
             >
               <span className="mr-3 text-[#d4af37]">✦</span>
               Noticias
+            </Link>
+
+            <Link
+              href="/admin/dashboard/comentarios"
+              className="block rounded-lg px-4 py-3 text-sm text-[#c7bda5] transition hover:bg-white/5 hover:text-[#d4af37]"
+            >
+              <span className="mr-3 text-[#d4af37]">☰</span>
+              Comentarios
             </Link>
 
             {sections
