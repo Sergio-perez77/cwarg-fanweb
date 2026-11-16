@@ -34,6 +34,56 @@ const [members, setMembers] = useState<BandMemberPublic[]>([]);
 const [isMembersLoading, setIsMembersLoading] = useState(true);
 const [membersError, setMembersError] = useState(false);
 
+const [currentUser, setCurrentUser] = useState<{
+  id: string;
+  displayName: string;
+} | null>(null);
+
+const [authLoading, setAuthLoading] = useState(true);
+
+useEffect(() => {
+  let isMounted = true;
+
+  async function loadCurrentUser() {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      if (isMounted) {
+        setCurrentUser(null);
+        setAuthLoading(false);
+      }
+      return;
+    }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (isMounted) {
+      setCurrentUser({
+        id: user.id,
+        displayName:
+          profile?.display_name ||
+          user.user_metadata?.display_name ||
+          user.email?.split("@")[0] ||
+          "Usuario",
+      });
+
+      setAuthLoading(false);
+    }
+  }
+
+  void loadCurrentUser();
+
+  return () => {
+    isMounted = false;
+  };
+}, []);
+
 useEffect(() => {
   let isMounted = true;
 
@@ -130,9 +180,29 @@ useEffect(() => {
             <a href="#multimedia">Multimedia</a>
           </nav>
 
-          <a href="#comunidad" className="header-cta">
-            Comunidad <span>↗</span>
-          </a>
+          {!authLoading && (
+            currentUser ? (
+              <div className="header-cta">
+                <Link href="/perfil">
+                  {currentUser.displayName}
+                </Link>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await supabase.auth.signOut();
+                    setCurrentUser(null);
+                    window.location.reload();
+                  }}
+                >
+                  Cerrar sesión
+                </button>
+              </div>
+            ) : (
+              <Link href="/login" className="header-cta">
+                Comunidad <span>↗</span>
+              </Link>
+            )
+          )}
         </header>
 
         <main>

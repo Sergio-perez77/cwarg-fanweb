@@ -17,12 +17,39 @@ type Props = {
 export default function MemberSignatures({ memberId }: Props) {
   const [signatures, setSignatures] = useState<Signature[]>([]);
   const [loading, setLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [userId, setUserId] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [message, setMessage] = useState("");
+  const [sending, setSending] = useState(false);
+  const [feedback, setFeedback] = useState("");
 
   useEffect(() => {
     let active = true;
 
-    async function loadSignatures() {
+    async function initialize() {
       const supabase = createClient();
+
+      const { data: authData } = await supabase.auth.getUser();
+      const user = authData.user;
+
+      if (active && user) {
+        setUserId(user.id);
+
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("display_name")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        const name =
+          profile?.display_name?.trim() ||
+          user.user_metadata?.display_name?.trim() ||
+          user.email?.split("@")[0] ||
+          "Usuario";
+
+        if (active) setDisplayName(name);
+      }
 
       const { data, error } = await supabase
         .from("member_signatures")
@@ -37,29 +64,31 @@ export default function MemberSignatures({ memberId }: Props) {
         setSignatures(data ?? []);
       }
 
-      if (active) setLoading(false);
+      if (active) {
+        setLoading(false);
+        setAuthLoading(false);
+      }
     }
 
-    void loadSignatures();
+    void initialize();
 
     return () => {
       active = false;
     };
   }, [memberId]);
 
-  const [displayName, setDisplayName] = useState("");
-  const [message, setMessage] = useState("");
-  const [sending, setSending] = useState(false);
-  const [feedback, setFeedback] = useState("");
-
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const name = displayName.trim();
     const text = message.trim();
 
-    if (name.length < 2 || name.length > 60) {
-      setFeedback("El nombre debe tener entre 2 y 60 caracteres.");
+    if (!userId) {
+      setFeedback("Iniciá sesión para poder firmar.");
+      return;
+    }
+
+    if (displayName.length < 2 || displayName.length > 60) {
+      setFeedback("Tu nombre de perfil debe tener entre 2 y 60 caracteres.");
       return;
     }
 
@@ -77,8 +106,10 @@ export default function MemberSignatures({ memberId }: Props) {
       .from("member_signatures")
       .insert({
         member_id: memberId,
-        display_name: name,
+        user_id: userId,
+        display_name: displayName,
         message: text,
+        status: "pending",
       });
 
     setSending(false);
@@ -89,7 +120,6 @@ export default function MemberSignatures({ memberId }: Props) {
       return;
     }
 
-    setDisplayName("");
     setMessage("");
     setFeedback("¡Gracias! Tu firma fue enviada y está pendiente de aprobación.");
   }
@@ -99,31 +129,38 @@ export default function MemberSignatures({ memberId }: Props) {
       <h2>Dejá tu firma</h2>
       <p>Compartí un mensaje para este integrante de The Obsession.</p>
 
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Tu nombre"
-          value={displayName}
-          onChange={(event) => setDisplayName(event.target.value)}
-          minLength={2}
-          maxLength={60}
-          required
-        />
+      {authLoading ? (
+        <p>Verificando tu sesión...</p>
+      ) : userId ? (
+        <form onSubmit={handleSubmit}>
+          <input
+            type="text"
+            value={displayName}
+            readOnly
+            aria-label="Nombre de perfil"
+          />
 
-        <textarea
-          placeholder="Escribí tu mensaje..."
-          value={message}
-          onChange={(event) => setMessage(event.target.value)}
-          minLength={3}
-          maxLength={1000}
-          rows={4}
-          required
-        />
+          <textarea
+            placeholder="Escribí tu mensaje..."
+            value={message}
+            onChange={(event) => setMessage(event.target.value)}
+            minLength={3}
+            maxLength={1000}
+            rows={4}
+            required
+          />
 
-        <button type="submit" disabled={sending}>
-          {sending ? "Enviando..." : "Enviar firma"}
-        </button>
-      </form>
+          <button type="submit" disabled={sending}>
+            {sending ? "Enviando..." : "Enviar firma"}
+          </button>
+        </form>
+      ) : (
+        <p>
+          Para dejar una firma necesitás{" "}
+          <a href="/login">iniciar sesión</a> o{" "}
+          <a href="/registro">crear una cuenta</a>.
+        </p>
+      )}
 
       {feedback && <p role="status">{feedback}</p>}
 

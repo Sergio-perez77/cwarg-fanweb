@@ -152,6 +152,28 @@ a {
   letter-spacing: 1px;
 }
 
+.header-cta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-cta a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.header-cta button {
+  background: transparent;
+  border: 1px solid rgba(231, 123, 168, 0.5);
+  color: var(--pink);
+  padding: 10px 14px;
+  font: inherit;
+  font-size: 11px;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+
 .header-cta span {
   margin-left: 8px;
 }
