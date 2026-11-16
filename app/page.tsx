@@ -37,9 +37,16 @@ const [membersError, setMembersError] = useState(false);
 const [currentUser, setCurrentUser] = useState<{
   id: string;
   displayName: string;
+  avatarUrl: string | null;
 } | null>(null);
 
 const [authLoading, setAuthLoading] = useState(true);
+const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+const [userSearch, setUserSearch] = useState("");
+const [userResults, setUserResults] = useState<
+  { id: string; display_name: string | null; avatar_url: string | null }[]
+>([]);
+const [isSearchingUsers, setIsSearchingUsers] = useState(false);
 
 useEffect(() => {
   let isMounted = true;
@@ -59,7 +66,7 @@ useEffect(() => {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("display_name")
+      .select("display_name, avatar_url")
       .eq("id", user.id)
       .maybeSingle();
 
@@ -71,6 +78,7 @@ useEffect(() => {
           user.user_metadata?.display_name ||
           user.email?.split("@")[0] ||
           "Usuario",
+        avatarUrl: profile?.avatar_url || null,
       });
 
       setAuthLoading(false);
@@ -143,6 +151,49 @@ useEffect(() => {
     };
   }, []);
 
+  useEffect(() => {
+  const search = userSearch.trim();
+
+  if (search.length < 2 || !currentUser) {
+    setUserResults([]);
+    setIsSearchingUsers(false);
+    return;
+  }
+
+  let isMounted = true;
+
+  async function searchUsers() {
+    setIsSearchingUsers(true);
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id, display_name, avatar_url")
+      .ilike("display_name", `%${search}%`)
+      .neq("id", currentUser!.id)
+      .limit(8);
+
+    if (!isMounted) return;
+
+    if (error) {
+      console.error("Error al buscar usuarios:", error.message);
+      setUserResults([]);
+    } else {
+      setUserResults(data ?? []);
+    }
+
+    setIsSearchingUsers(false);
+  }
+
+  const timeout = setTimeout(() => {
+    void searchUsers();
+  }, 300);
+
+  return () => {
+    isMounted = false;
+    clearTimeout(timeout);
+  };
+}, [userSearch, currentUser]);
+
   const handleLoadingComplete = useCallback(() => {
     setIsLoading(false);
   }, []);
@@ -182,20 +233,98 @@ useEffect(() => {
 
           {!authLoading && (
             currentUser ? (
-              <div className="header-cta">
-                <Link href="/perfil">
-                  {currentUser.displayName}
-                </Link>
+              <div className="user-menu-container">
                 <button
                   type="button"
-                  onClick={async () => {
-                    await supabase.auth.signOut();
-                    setCurrentUser(null);
-                    window.location.reload();
-                  }}
+                  className="user-menu-trigger"
+                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  aria-expanded={isUserMenuOpen}
                 >
-                  Cerrar sesión
+                  {currentUser.avatarUrl ? (
+                    <img
+                      src={currentUser.avatarUrl}
+                      alt="Foto de perfil"
+                      className="user-menu-avatar"
+                    />
+                  ) : (
+                    <div className="user-menu-avatar user-menu-avatar-fallback">
+                      {currentUser.displayName.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+
+                  <span className="user-menu-name">
+                    {currentUser.displayName}
+                  </span>
                 </button>
+
+                {isUserMenuOpen && (
+                  <div className="user-menu-dropdown">
+                    <div className="user-menu-search">
+                      <input
+                        type="search"
+                        placeholder="Buscar usuarios..."
+                        value={userSearch}
+                        onChange={(e) => setUserSearch(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="user-menu-results">
+                      {userSearch.trim().length < 2 ? (
+                        <p>Escribí al menos 2 caracteres para buscar.</p>
+                      ) : isSearchingUsers ? (
+                        <p>Buscando usuarios...</p>
+                      ) : userResults.length > 0 ? (
+                        userResults.map((user) => (
+                          <Link
+                            key={user.id}
+                            href={`/usuarios/${user.id}`}
+                            className="user-menu-result"
+                            onClick={() => setIsUserMenuOpen(false)}
+                          >
+                            {user.avatar_url ? (
+                              <img
+                                src={user.avatar_url}
+                                alt=""
+                                className="user-menu-result-avatar"
+                              />
+                            ) : (
+                              <div className="user-menu-result-avatar user-menu-avatar-fallback">
+                                {(user.display_name || "U").charAt(0).toUpperCase()}
+                              </div>
+                            )}
+
+                            <span>{user.display_name || "Usuario"}</span>
+                          </Link>
+                        ))
+                      ) : (
+                        <p>No se encontraron usuarios.</p>
+                      )}
+                    </div>
+
+                    <div className="user-menu-divider" />
+
+                    <Link
+                      href="/perfil"
+                      className="user-menu-option"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      Mi perfil
+                    </Link>
+
+                    <button
+                      type="button"
+                      className="user-menu-option"
+                      onClick={async () => {
+                        await supabase.auth.signOut();
+                        setCurrentUser(null);
+                        setIsUserMenuOpen(false);
+                        window.location.reload();
+                      }}
+                    >
+                      Cerrar sesión
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               <Link href="/login" className="header-cta">

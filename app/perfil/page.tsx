@@ -18,6 +18,7 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [feedback, setFeedback] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
@@ -48,6 +49,7 @@ export default function ProfilePage() {
         const profile = data as Profile;
         setDisplayName(profile.display_name ?? "");
         setBio(profile.bio ?? "");
+        setAvatarUrl(profile.avatar_url ?? null);
       }
 
       setLoading(false);
@@ -55,6 +57,86 @@ export default function ProfilePage() {
 
     void loadProfile();
   }, []);
+
+  async function handleAvatarUpload(
+    event: React.ChangeEvent<HTMLInputElement>
+  ) {
+  const file = event.target.files?.[0];
+
+  if (!file) return;
+
+  if (file.size > 2 * 1024 * 1024) {
+    setFeedback("La imagen no puede superar los 2 MB.");
+    event.target.value = "";
+    return;
+  }
+
+  const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+
+  if (!allowedTypes.includes(file.type)) {
+    setFeedback("Formato no válido. Usá JPG, PNG o WebP.");
+    event.target.value = "";
+    return;
+  }
+
+  setFeedback("");
+
+  const supabase = createClient();
+
+  const { data: { user }, error: authError } =
+    await supabase.auth.getUser();
+
+  if (authError || !user) {
+    setFeedback("Tu sesión expiró. Iniciá sesión nuevamente.");
+    return;
+  }
+
+  const extension = file.type === "image/jpeg"
+    ? "jpg"
+    : file.type === "image/png"
+      ? "png"
+      : "webp";
+
+  const filePath = `${user.id}/avatar-${Date.now()}.${extension}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("profile-avatars")
+    .upload(filePath, file, {
+      cacheControl: "3600",
+      upsert: false,
+      contentType: file.type,
+    });
+
+  if (uploadError) {
+    console.error("Error al subir la imagen:", uploadError.message);
+    setFeedback("No se pudo subir la imagen. Intentá nuevamente.");
+    return;
+  }
+
+  const { data: publicUrlData } = supabase.storage
+    .from("profile-avatars")
+    .getPublicUrl(filePath);
+
+  const publicUrl = publicUrlData.publicUrl;
+
+  const { error: updateError } = await supabase
+    .from("profiles")
+    .update({
+      avatar_url: publicUrl,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", user.id);
+
+  if (updateError) {
+    console.error("Error al guardar la foto:", updateError.message);
+    setFeedback("La imagen se subió, pero no se pudo guardar en el perfil.");
+    return;
+  }
+
+  setAvatarUrl(publicUrl);
+    setFeedback("¡Tu foto de perfil se actualizó correctamente!");
+    event.target.value = "";
+  }
 
   async function handleSave(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -181,6 +263,48 @@ export default function ProfilePage() {
           </div>
 
           <form onSubmit={handleSave} className="space-y-6">
+
+            <div>
+              <label className="mb-3 block text-sm text-[#f8f3e5]">
+                Foto de perfil
+              </label>
+
+              <div className="flex items-center gap-5">
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt="Foto de perfil"
+                    className="h-24 w-24 rounded-full border-2 border-[#d4af37] object-cover"
+                  />
+                ) : (
+                  <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-[#d4af37] bg-black/40 text-3xl font-semibold text-[#ffe680]">
+                    {displayName.charAt(0).toUpperCase() || "U"}
+                  </div>
+                )}
+
+                <div>
+                  <label
+                    htmlFor="avatar"
+                    className="inline-block cursor-pointer rounded-lg border border-[#d4af37]/40 px-4 py-2 text-sm text-[#d4af37] transition hover:bg-[#d4af37]/10"
+                  >
+                    Elegir imagen
+                  </label>
+
+                  <input
+                    id="avatar"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleAvatarUpload}
+                    className="hidden"
+                  />
+
+                  <p className="mt-2 text-xs text-[#a99e83]">
+                    JPG, PNG o WebP. Máximo 2 MB.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <div>
               <label
                 htmlFor="displayName"
