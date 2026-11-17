@@ -67,7 +67,8 @@ async function DashboardContent() {
       title: "Discografía",
       description: "Administrar álbumes y canciones.",
       icon: "♫",
-      available: false,
+      href: "/admin/dashboard/discografia",
+      available: true,
     },
     {
       title: "Multimedia",
@@ -77,7 +78,7 @@ async function DashboardContent() {
     },
     {
       title: "Comentarios",
-      description: "Moderar comentarios de usuarios.",
+      description: "Gestionar comentarios de usuarios.",
       icon: "☰",
       href: "/admin/dashboard/comentarios",
       available: true,
@@ -135,6 +136,22 @@ async function DashboardContent() {
             >
               <span className="mr-3 text-[#d4af37]">✦</span>
               Noticias
+            </Link>
+
+            <Link
+              href="/admin/dashboard/discografia"
+              className="block rounded-lg px-4 py-3 text-sm text-[#c7bda5] transition hover:bg-white/5 hover:text-[#d4af37]"
+            >
+              <span className="mr-3 text-[#d4af37]">♫</span>
+              Discografía
+            </Link>
+
+            <Link
+              href="/admin/dashboard/discografia"
+              className="block rounded-lg px-4 py-3 text-sm text-[#c7bda5] transition hover:bg-white/5 hover:text-[#d4af37]"
+            >
+              <span className="mr-3 text-[#d4af37]">♫</span>
+              Discografía
             </Link>
 
             <Link
@@ -228,10 +245,14 @@ async function DashboardContent() {
                   <div className="mt-6 border-t border-[#d4af37]/10 pt-4">
                     <span className="text-xs text-[#d4af37]">
                       {section.title === "Noticias"
-                        ? "Administrar noticias →"
-                        : section.title === "Integrantes"
-                        ? "Administrar integrantes →"
-                        : "Próximamente"}
+                      ? "Administrar noticias →"
+                      : section.title === "Integrantes"
+                      ? "Administrar integrantes →"
+                      : section.title === "Comentarios"
+                      ? "Administrar comentarios →"
+                      : section.title === "Discografía"
+                      ? "Administrar discos →"
+                      : "Próximamente"}
                     </span>
                   </div>
                 </Link>
