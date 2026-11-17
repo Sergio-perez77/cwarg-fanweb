@@ -4,12 +4,20 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import UserPosts from "@/app/components/UserPosts";
+import ProfileTabs from "@/app/usuarios/[id]/ProfileTabs";
 
 type Profile = {
   display_name: string | null;
   bio: string | null;
   avatar_url: string | null;
+};
+
+type Signature = {
+  id: string;
+  display_name: string;
+  message: string;
+  created_at: string;
+  member_name: string;
 };
 
 export default function ProfilePage() {
@@ -24,6 +32,7 @@ export default function ProfilePage() {
   const [feedback, setFeedback] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userId, setUserId] = useState("");
+  const[signatures, setSignatures] = useState<Signature[]>([]);
 
   useEffect(() => {
     async function loadProfile() {
@@ -36,6 +45,7 @@ export default function ProfilePage() {
 
       if (authError || !user) {
         setIsLoggedIn(false);
+
         setLoading(false);
         return;
       }
@@ -57,6 +67,33 @@ export default function ProfilePage() {
         setBio(profile.bio ?? "");
         setAvatarUrl(profile.avatar_url ?? null);
       }
+
+      const { data: signatureData, error: signatureError } = await supabase
+        .from("member_signatures")
+        .select(`
+          id,
+          display_name,
+          message,
+          created_at,
+          band_members ( name )
+        `)
+        .eq("user_id", user.id)
+        .eq("status", "approved")
+        .order("created_at", { ascending: false });
+
+        if (signatureError) {
+          console.error("Error al cargar las firmas:", signatureError.message);
+        } else {
+          setSignatures(
+            (signatureData ?? []).map((item: any) => ({
+              id: item.id,
+              display_name: item.display_name,
+              message: item.message,
+              created_at: item.created_at,
+              member_name: item.band_members?.name ?? "Integrante",
+            }))
+          );
+        }
 
       setLoading(false);
     }
@@ -462,26 +499,14 @@ export default function ProfilePage() {
           </p>
         )}
 
-        {/* Publicaciones */}
-        <section className="mt-8">
-          <div className="mb-5 flex items-center justify-between">
-            <div>
-              <p className="text-xs tracking-[0.2em] text-[#d4af37]">
-                COMUNIDAD
-              </p>
-              <h2 className="mt-1 text-2xl font-semibold text-[#f8f3e5]">
-                Mis publicaciones
-              </h2>
-            </div>
-          </div>
-
-          <UserPosts
-            userId={userId}
-            isOwner={true}
-            displayName={displayName || "Usuario"}
-            avatarUrl={avatarUrl}
-          />
-        </section>
+        {/* Secciones del perfil */}
+        <ProfileTabs
+          signatures={signatures}
+          userId={userId}
+          displayName={displayName || "Usuario"}
+          avatarUrl={avatarUrl}
+          isOwner={true}
+        />
       </div>
     </main>
   );

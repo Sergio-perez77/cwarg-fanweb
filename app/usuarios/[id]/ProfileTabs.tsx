@@ -90,7 +90,7 @@ export default function ProfileTabs({
 
             <UserPosts
               userId={userId}
-              isOwner={isOwner}
+              isOwner={false}
               displayName={displayName}
               avatarUrl={avatarUrl}
             />
