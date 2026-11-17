@@ -3,7 +3,6 @@
 import { useState } from "react";
 import UserPosts from "@/app/components/UserPosts";
 
-
 type Tab = "Inicio" | "Publicaciones" | "Playlists" | "Firmas";
 
 type Signature = {
@@ -39,10 +38,11 @@ export default function ProfileTabs({
   ];
 
   return (
-    <section className="mt-6">
+    <section className="mt-8">
+      {/* Navegación del perfil */}
       <nav
         aria-label="Secciones del perfil"
-        className="flex flex-wrap justify-center gap-2 border-b border-[#d4af37]/20 pb-4"
+        className="flex gap-6 overflow-x-auto border-b border-[#d4af37]/20"
       >
         {tabs.map((tab) => (
           <button
@@ -50,151 +50,182 @@ export default function ProfileTabs({
             type="button"
             onClick={() => setActiveTab(tab)}
             aria-pressed={activeTab === tab}
-            className={`rounded-lg px-4 py-2 text-sm transition ${
+            className={`relative shrink-0 pb-4 text-sm font-medium transition ${
               activeTab === tab
-                ? "bg-[#d4af37] font-semibold text-black"
-                : "bg-black/30 text-[#a99e83] hover:bg-[#d4af37]/10 hover:text-[#ffe680]"
+                ? "text-[#d4af37]"
+                : "text-[#a99e83] hover:text-[#f8f3e5]"
             }`}
           >
             {tab}
+
+            {activeTab === tab && (
+              <span className="absolute bottom-0 left-0 h-0.5 w-full rounded-full bg-[#d4af37]" />
+            )}
           </button>
         ))}
       </nav>
 
-        <div className="mt-6 rounded-2xl border border-[#d4af37]/20 bg-[#15120a] p-6">
-            <h2 className="mb-5 text-xl font-semibold text-[#f8f3e5]">
-                {activeTab}
-            </h2>
-
-            {activeTab === "Inicio" && (
-                <div className="space-y-8">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                    {[
-                    { label: "Publicaciones", value: "—" },
-                    { label: "Playlists", value: "—" },
-                    { label: "Firmas", value: "—" },
-                    ].map((stat) => (
-                    <div
-                        key={stat.label}
-                        className="rounded-xl border border-[#d4af37]/20 bg-black/30 p-5 text-center"
-                    >
-                        <p className="text-3xl font-semibold text-[#d4af37]">
-                        {stat.value}
-                        </p>
-                        <p className="mt-2 text-sm text-[#a99e83]">
-                        {stat.label}
-                        </p>
-                    </div>
-                    ))}
-                </div>
-
-                <section>
-                    <div className="mb-4 flex items-center justify-between">
-                        <h3 className="text-lg font-semibold text-[#f8f3e5]">
-                        Publicaciones recientes
-                        </h3>
-
-                        <button
-                        type="button"
-                        onClick={() => setActiveTab("Publicaciones")}
-                        className="text-xs text-[#d4af37] hover:text-[#ffe680]"
-                        >
-                        Ver todas
-                        </button>
-                    </div>
-
-                    <UserPosts
-                        userId={userId}
-                        isOwner={isOwner}
-                        displayName={displayName}
-                        avatarUrl={avatarUrl}
-                    />
-                </section>
-
-                <section>
-                    <div className="mb-4 flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-[#f8f3e5]">
-                        Playlists destacadas
-                    </h3>
-                    <span className="text-xs text-[#d4af37]">
-                        Próximamente
-                    </span>
-                    </div>
-
-                    <div className="rounded-xl border border-dashed border-[#d4af37]/20 bg-black/20 p-8 text-center">
-                    <p className="text-sm text-[#a99e83]">
-                        Aquí aparecerán las playlists favoritas o destacadas de este usuario.
-                    </p>
-                    </div>
-                </section>
-
-                <section>
-                    <div className="mb-4 flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-[#f8f3e5]">
-                        Actividad reciente
-                    </h3>
-                    <span className="text-xs text-[#d4af37]">
-                        Próximamente
-                    </span>
-                    </div>
-
-                    <div className="rounded-xl border border-dashed border-[#d4af37]/20 bg-black/20 p-8 text-center">
-                    <p className="text-sm text-[#a99e83]">
-                        Aquí se mostrará la actividad reciente de este usuario en la comunidad.
-                    </p>
-                    </div>
-                </section>
-                </div>
-            )}
-
-            {activeTab === "Publicaciones" && (
-                <UserPosts
-                    userId={userId}
-                    isOwner={isOwner}
-                    displayName={displayName}
-                    avatarUrl={avatarUrl}
-                />
-            )}
-
-            {activeTab === "Playlists" && (
-                <p className="text-sm text-[#a99e83]">
-                Aquí aparecerán las playlists creadas por el usuario.
+      {/* Inicio */}
+      {activeTab === "Inicio" && (
+        <div className="mt-7 space-y-8">
+          <section>
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[10px] tracking-[0.2em] text-[#d4af37]">
+                  ACTIVIDAD
                 </p>
-            )}
+                <h2 className="mt-1 text-xl font-semibold text-[#f8f3e5]">
+                  Publicaciones recientes
+                </h2>
+              </div>
 
-            {activeTab === "Firmas" && (
-                <div className="space-y-4">
-                    {signatures.length === 0 ? (
-                    <div className="rounded-xl border border-dashed border-[#d4af37]/20 bg-black/20 p-8 text-center">
-                        <p className="text-sm text-[#a99e83]">
-                        Todavía no hay firmas aprobadas de este usuario.
-                        </p>
-                    </div>
-                    ) : (
-                    signatures.map((signature) => (
-                        <article
-                        key={signature.id}
-                        className="rounded-xl border border-[#d4af37]/20 bg-black/30 p-5"
-                        >
-                        <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-[#f8f3e5]">
-                            {signature.message}
-                        </p>
+              <button
+                type="button"
+                onClick={() => setActiveTab("Publicaciones")}
+                className="shrink-0 text-xs text-[#d4af37] transition hover:text-[#ffe680]"
+              >
+                Ver todas →
+              </button>
+            </div>
 
-                        <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-[#d4af37]/15 pt-3">
-                            <span className="text-sm text-[#d4af37]">
-                            Para {signature.member_name}
-                            </span>
+            <UserPosts
+              userId={userId}
+              isOwner={isOwner}
+              displayName={displayName}
+              avatarUrl={avatarUrl}
+            />
+          </section>
 
-                            <time className="text-xs text-[#a99e83]">
-                            {new Date(signature.created_at).toLocaleDateString("es-AR")}
-                            </time>
-                        </div>
-                        </article>
-                    ))
-                    )}
-                </div>
-            )}
+          <section>
+            <div className="mb-4">
+              <p className="text-[10px] tracking-[0.2em] text-[#d4af37]">
+                MÚSICA
+              </p>
+              <h2 className="mt-1 text-xl font-semibold text-[#f8f3e5]">
+                Playlists destacadas
+              </h2>
+            </div>
+
+            <div className="rounded-xl border border-dashed border-[#d4af37]/20 bg-[#15120a]/60 p-7 text-center">
+              <p className="text-sm text-[#a99e83]">
+                Aquí aparecerán las playlists favoritas o destacadas de este usuario.
+              </p>
+              <span className="mt-3 inline-block text-[10px] tracking-[0.2em] text-[#d4af37]">
+                PRÓXIMAMENTE
+              </span>
+            </div>
+          </section>
+
+          <section>
+            <div className="mb-4">
+              <p className="text-[10px] tracking-[0.2em] text-[#d4af37]">
+                COMUNIDAD
+              </p>
+              <h2 className="mt-1 text-xl font-semibold text-[#f8f3e5]">
+                Actividad reciente
+              </h2>
+            </div>
+
+            <div className="rounded-xl border border-dashed border-[#d4af37]/20 bg-[#15120a]/60 p-7 text-center">
+              <p className="text-sm text-[#a99e83]">
+                Aquí se mostrará la actividad reciente de este usuario en la comunidad.
+              </p>
+              <span className="mt-3 inline-block text-[10px] tracking-[0.2em] text-[#d4af37]">
+                PRÓXIMAMENTE
+              </span>
+            </div>
+          </section>
         </div>
+      )}
+
+      {/* Publicaciones */}
+      {activeTab === "Publicaciones" && (
+        <section className="mt-7">
+          <div className="mb-5">
+            <p className="text-[10px] tracking-[0.2em] text-[#d4af37]">
+              COMUNIDAD
+            </p>
+            <h2 className="mt-1 text-xl font-semibold text-[#f8f3e5]">
+              Publicaciones
+            </h2>
+          </div>
+
+          <UserPosts
+            userId={userId}
+            isOwner={isOwner}
+            displayName={displayName}
+            avatarUrl={avatarUrl}
+          />
+        </section>
+      )}
+
+      {/* Playlists */}
+      {activeTab === "Playlists" && (
+        <section className="mt-7">
+          <div className="mb-5">
+            <p className="text-[10px] tracking-[0.2em] text-[#d4af37]">
+              MÚSICA
+            </p>
+            <h2 className="mt-1 text-xl font-semibold text-[#f8f3e5]">
+              Playlists
+            </h2>
+          </div>
+
+          <div className="rounded-xl border border-dashed border-[#d4af37]/20 bg-[#15120a]/60 p-8 text-center">
+            <p className="text-sm text-[#a99e83]">
+              Aquí aparecerán las playlists creadas por el usuario.
+            </p>
+            <span className="mt-3 inline-block text-[10px] tracking-[0.2em] text-[#d4af37]">
+              PRÓXIMAMENTE
+            </span>
+          </div>
+        </section>
+      )}
+
+      {/* Firmas */}
+      {activeTab === "Firmas" && (
+        <section className="mt-7">
+          <div className="mb-5">
+            <p className="text-[10px] tracking-[0.2em] text-[#d4af37]">
+              COLECCIÓN
+            </p>
+            <h2 className="mt-1 text-xl font-semibold text-[#f8f3e5]">
+              Firmas de integrantes
+            </h2>
+          </div>
+
+          {signatures.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-[#d4af37]/20 bg-[#15120a]/60 p-8 text-center">
+              <p className="text-sm text-[#a99e83]">
+                Todavía no hay firmas aprobadas de este usuario.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {signatures.map((signature) => (
+                <article
+                  key={signature.id}
+                  className="rounded-xl border border-[#d4af37]/15 bg-gradient-to-br from-[#19150e] to-[#0d0b08] p-5 transition hover:border-[#d4af37]/35"
+                >
+                  <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-[#f8f3e5]">
+                    {signature.message}
+                  </p>
+
+                  <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-[#d4af37]/15 pt-3">
+                    <span className="text-sm text-[#d4af37]">
+                      Para {signature.member_name}
+                    </span>
+
+                    <time className="text-xs text-[#a99e83]">
+                      {new Date(signature.created_at).toLocaleDateString("es-AR")}
+                    </time>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
     </section>
   );
 }

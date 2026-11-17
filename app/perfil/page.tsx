@@ -17,6 +17,7 @@ export default function ProfilePage() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -28,8 +29,10 @@ export default function ProfilePage() {
     async function loadProfile() {
       const supabase = createClient();
 
-      const { data: { user }, error: authError } =
-        await supabase.auth.getUser();
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
 
       if (authError || !user) {
         setIsLoggedIn(false);
@@ -64,79 +67,82 @@ export default function ProfilePage() {
   async function handleAvatarUpload(
     event: React.ChangeEvent<HTMLInputElement>
   ) {
-  const file = event.target.files?.[0];
+    const file = event.target.files?.[0];
 
-  if (!file) return;
+    if (!file) return;
 
-  if (file.size > 2 * 1024 * 1024) {
-    setFeedback("La imagen no puede superar los 2 MB.");
-    event.target.value = "";
-    return;
-  }
+    if (file.size > 2 * 1024 * 1024) {
+      setFeedback("La imagen no puede superar los 2 MB.");
+      event.target.value = "";
+      return;
+    }
 
-  const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
 
-  if (!allowedTypes.includes(file.type)) {
-    setFeedback("Formato no válido. Usá JPG, PNG o WebP.");
-    event.target.value = "";
-    return;
-  }
+    if (!allowedTypes.includes(file.type)) {
+      setFeedback("Formato no válido. Usá JPG, PNG o WebP.");
+      event.target.value = "";
+      return;
+    }
 
-  setFeedback("");
+    setFeedback("");
 
-  const supabase = createClient();
+    const supabase = createClient();
 
-  const { data: { user }, error: authError } =
-    await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
-  if (authError || !user) {
-    setFeedback("Tu sesión expiró. Iniciá sesión nuevamente.");
-    return;
-  }
+    if (authError || !user) {
+      setFeedback("Tu sesión expiró. Iniciá sesión nuevamente.");
+      return;
+    }
 
-  const extension = file.type === "image/jpeg"
-    ? "jpg"
-    : file.type === "image/png"
-      ? "png"
-      : "webp";
+    const extension =
+      file.type === "image/jpeg"
+        ? "jpg"
+        : file.type === "image/png"
+          ? "png"
+          : "webp";
 
-  const filePath = `${user.id}/avatar-${Date.now()}.${extension}`;
+    const filePath = `${user.id}/avatar-${Date.now()}.${extension}`;
 
-  const { error: uploadError } = await supabase.storage
-    .from("profile-avatars")
-    .upload(filePath, file, {
-      cacheControl: "3600",
-      upsert: false,
-      contentType: file.type,
-    });
+    const { error: uploadError } = await supabase.storage
+      .from("profile-avatars")
+      .upload(filePath, file, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: file.type,
+      });
 
-  if (uploadError) {
-    console.error("Error al subir la imagen:", uploadError.message);
-    setFeedback("No se pudo subir la imagen. Intentá nuevamente.");
-    return;
-  }
+    if (uploadError) {
+      console.error("Error al subir la imagen:", uploadError.message);
+      setFeedback("No se pudo subir la imagen. Intentá nuevamente.");
+      return;
+    }
 
-  const { data: publicUrlData } = supabase.storage
-    .from("profile-avatars")
-    .getPublicUrl(filePath);
+    const { data: publicUrlData } = supabase.storage
+      .from("profile-avatars")
+      .getPublicUrl(filePath);
 
-  const publicUrl = publicUrlData.publicUrl;
+    const publicUrl = publicUrlData.publicUrl;
 
-  const { error: updateError } = await supabase
-    .from("profiles")
-    .update({
-      avatar_url: publicUrl,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", user.id);
+    const { error: updateError } = await supabase
+      .from("profiles")
+      .update({
+        avatar_url: publicUrl,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", user.id);
 
-  if (updateError) {
-    console.error("Error al guardar la foto:", updateError.message);
-    setFeedback("La imagen se subió, pero no se pudo guardar en el perfil.");
-    return;
-  }
+    if (updateError) {
+      console.error("Error al guardar la foto:", updateError.message);
+      setFeedback("La imagen se subió, pero no se pudo guardar en el perfil.");
+      return;
+    }
 
-  setAvatarUrl(publicUrl);
+    setAvatarUrl(publicUrl);
     setFeedback("¡Tu foto de perfil se actualizó correctamente!");
     event.target.value = "";
   }
@@ -162,7 +168,9 @@ export default function ProfilePage() {
 
     const supabase = createClient();
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     if (!user) {
       setFeedback("Tu sesión expiró. Iniciá sesión nuevamente.");
@@ -183,7 +191,10 @@ export default function ProfilePage() {
       console.error("Error al guardar el perfil:", error.message);
       setFeedback("No se pudieron guardar los cambios. Intentá nuevamente.");
     } else {
+      setDisplayName(cleanName);
+      setBio(cleanBio);
       setFeedback("¡Tu perfil se actualizó correctamente!");
+      setEditing(false);
     }
 
     setSaving(false);
@@ -204,7 +215,7 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen flex items-center justify-center bg-[#080706] text-[#d4af37]">
+      <main className="flex min-h-screen items-center justify-center bg-[#080706] text-[#d4af37]">
         Cargando perfil...
       </main>
     );
@@ -212,7 +223,7 @@ export default function ProfilePage() {
 
   if (!isLoggedIn) {
     return (
-      <main className="min-h-screen flex items-center justify-center bg-[#080706] px-6">
+      <main className="flex min-h-screen items-center justify-center bg-[#080706] px-6">
         <div className="w-full max-w-md rounded-2xl border border-[#d4af37]/20 bg-[#15120a] p-8 text-center">
           <h1 className="mb-4 text-2xl font-semibold text-[#f8f3e5]">
             Mi perfil
@@ -243,149 +254,233 @@ export default function ProfilePage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#080706] px-6 py-12">
-      <div className="mx-auto w-full max-w-2xl">
-        <Link
-          href="/"
-          className="mb-8 inline-block text-sm text-[#a99e83] hover:text-[#d4af37]"
-        >
-          ← Volver al inicio
-        </Link>
+    <main className="min-h-screen bg-[#080706] px-4 py-8 sm:px-6 sm:py-12">
+      <div className="mx-auto w-full max-w-4xl">
+        <div className="mb-8 flex items-center justify-between">
+          <Link
+            href="/"
+            className="text-sm text-[#a99e83] transition hover:text-[#d4af37]"
+          >
+            ← Volver al inicio
+          </Link>
 
-        <section className="rounded-2xl border border-[#d4af37]/20 bg-[#15120a] p-8 shadow-2xl">
-          <div className="mb-8">
-            <p className="mb-3 text-sm tracking-[0.3em] text-[#d4af37]">
-              CHARLOTTE WESSELS ARGENTINA
-            </p>
-            <h1 className="text-3xl font-semibold text-[#f8f3e5]">
-              Mi perfil
-            </h1>
-            <p className="mt-3 text-sm text-[#a99e83]">
-              Personalizá cómo te ve el resto de la comunidad.
-            </p>
-          </div>
+          <span className="text-right text-xs tracking-[0.2em] text-[#d4af37]">
+            CHARLOTTE WESSELS ARGENTINA
+          </span>
+        </div>
 
-          <form onSubmit={handleSave} className="space-y-6">
+        {/* Encabezado del perfil */}
+        <section className="overflow-hidden rounded-xl border border-[#d4af37]/20 bg-gradient-to-br from-[#19150e] to-[#0d0b08] shadow-xl">
+          <div className="h-1 bg-gradient-to-r from-transparent via-[#d4af37] to-transparent" />
 
-            <div>
-              <label className="mb-3 block text-sm text-[#f8f3e5]">
-                Foto de perfil
-              </label>
-
-              <div className="flex items-center gap-5">
+          <div className="p-5 sm:p-7">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 items-center gap-4 sm:gap-5">
                 {avatarUrl ? (
                   <img
                     src={avatarUrl}
                     alt="Foto de perfil"
-                    className="h-24 w-24 rounded-full border-2 border-[#d4af37] object-cover"
+                    className="h-20 w-20 shrink-0 rounded-full border-2 border-[#d4af37] object-cover sm:h-24 sm:w-24"
                   />
                 ) : (
-                  <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-[#d4af37] bg-black/40 text-3xl font-semibold text-[#ffe680]">
+                  <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full border-2 border-[#d4af37] bg-black/40 text-3xl font-semibold text-[#ffe680] sm:h-24 sm:w-24">
                     {displayName.charAt(0).toUpperCase() || "U"}
                   </div>
                 )}
 
-                <div>
-                  <label
-                    htmlFor="avatar"
-                    className="inline-block cursor-pointer rounded-lg border border-[#d4af37]/40 px-4 py-2 text-sm text-[#d4af37] transition hover:bg-[#d4af37]/10"
-                  >
-                    Elegir imagen
-                  </label>
-
-                  <input
-                    id="avatar"
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    onChange={handleAvatarUpload}
-                    className="hidden"
-                  />
-
-                  <p className="mt-2 text-xs text-[#a99e83]">
-                    JPG, PNG o WebP. Máximo 2 MB.
+                <div className="min-w-0">
+                  <p className="mb-1 text-[10px] tracking-[0.25em] text-[#d4af37]">
+                    CHARLOTTE WESSELS ARGENTINA
+                  </p>
+                  <h1 className="break-words text-2xl font-semibold text-[#f8f3e5] sm:text-3xl">
+                    {displayName || "Usuario"}
+                  </h1>
+                  <p className="mt-1 text-xs text-[#a99e83]">
+                    Miembro de la comunidad
                   </p>
                 </div>
               </div>
+
+              <div className="flex shrink-0 flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFeedback("");
+                    setEditing((current) => !current);
+                  }}
+                  className="rounded-lg bg-[#d4af37] px-4 py-2.5 text-sm font-semibold text-black transition hover:bg-[#ffe680]"
+                >
+                  {editing ? "Cancelar edición" : "Editar perfil"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="rounded-lg border border-red-400/30 px-4 py-2.5 text-sm text-red-400 transition hover:bg-red-400/10"
+                >
+                  Cerrar sesión
+                </button>
+              </div>
             </div>
 
-            <div>
-              <label
-                htmlFor="displayName"
-                className="mb-2 block text-sm text-[#f8f3e5]"
-              >
-                Nombre público
-              </label>
-              <input
-                id="displayName"
-                type="text"
-                value={displayName}
-                onChange={(event) => setDisplayName(event.target.value)}
-                minLength={2}
-                maxLength={60}
-                required
-                className="w-full rounded-lg border border-[#d4af37]/25 bg-black/40 px-4 py-3 text-white outline-none focus:border-[#d4af37]"
-                placeholder="Tu nombre de usuario"
-              />
+            <div className="mt-5 border-t border-[#d4af37]/15 pt-4">
+              <p className="mb-2 text-[10px] font-semibold tracking-[0.2em] text-[#d4af37]">
+                SOBRE MÍ
+              </p>
+              <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-[#c1b69e]">
+                {bio || "Todavía no agregaste una biografía."}
+              </p>
             </div>
+          </div>
+        </section>
 
-            <div>
-              <label
-                htmlFor="bio"
-                className="mb-2 block text-sm text-[#f8f3e5]"
-              >
-                Biografía
-              </label>
-              <textarea
-                id="bio"
-                value={bio}
-                onChange={(event) => setBio(event.target.value)}
-                maxLength={300}
-                rows={5}
-                className="w-full resize-y rounded-lg border border-[#d4af37]/25 bg-black/40 px-4 py-3 text-white outline-none focus:border-[#d4af37]"
-                placeholder="Contá algo sobre vos..."
-              />
-              <p className="mt-2 text-right text-xs text-[#a99e83]">
-                {bio.length}/300 caracteres
+        {/* Formulario de edición */}
+        {editing && (
+          <section className="mt-6 rounded-2xl border border-[#d4af37]/20 bg-[#15120a] p-5 shadow-xl sm:p-8">
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold text-[#f8f3e5]">
+                Editar mi perfil
+              </h2>
+              <p className="mt-2 text-sm text-[#a99e83]">
+                Actualizá tu información y tu foto de perfil.
               </p>
             </div>
 
-            {feedback && (
-              <p role="status" className="text-sm text-[#d4af37]">
-                {feedback}
+            <form onSubmit={handleSave} className="space-y-6">
+              <div>
+                <label className="mb-3 block text-sm text-[#f8f3e5]">
+                  Foto de perfil
+                </label>
+
+                <div className="flex items-center gap-5">
+                  {avatarUrl ? (
+                    <img
+                      src={avatarUrl}
+                      alt="Foto de perfil"
+                      className="h-20 w-20 rounded-full border-2 border-[#d4af37] object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-[#d4af37] bg-black/40 text-2xl font-semibold text-[#ffe680]">
+                      {displayName.charAt(0).toUpperCase() || "U"}
+                    </div>
+                  )}
+
+                  <div>
+                    <label
+                      htmlFor="avatar"
+                      className="inline-block cursor-pointer rounded-lg border border-[#d4af37]/40 px-4 py-2 text-sm text-[#d4af37] transition hover:bg-[#d4af37]/10"
+                    >
+                      Cambiar imagen
+                    </label>
+
+                    <input
+                      id="avatar"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={handleAvatarUpload}
+                      className="hidden"
+                    />
+
+                    <p className="mt-2 text-xs text-[#a99e83]">
+                      JPG, PNG o WebP. Máximo 2 MB.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="displayName"
+                  className="mb-2 block text-sm text-[#f8f3e5]"
+                >
+                  Nombre público
+                </label>
+                <input
+                  id="displayName"
+                  type="text"
+                  value={displayName}
+                  onChange={(event) => setDisplayName(event.target.value)}
+                  minLength={2}
+                  maxLength={60}
+                  required
+                  className="w-full rounded-lg border border-[#d4af37]/25 bg-black/40 px-4 py-3 text-white outline-none focus:border-[#d4af37]"
+                  placeholder="Tu nombre de usuario"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="bio"
+                  className="mb-2 block text-sm text-[#f8f3e5]"
+                >
+                  Biografía
+                </label>
+                <textarea
+                  id="bio"
+                  value={bio}
+                  onChange={(event) => setBio(event.target.value)}
+                  maxLength={300}
+                  rows={4}
+                  className="w-full resize-y rounded-lg border border-[#d4af37]/25 bg-black/40 px-4 py-3 text-white outline-none focus:border-[#d4af37]"
+                  placeholder="Contá algo sobre vos..."
+                />
+                <p className="mt-2 text-right text-xs text-[#a99e83]">
+                  {bio.length}/300 caracteres
+                </p>
+              </div>
+
+              {feedback && (
+                <p role="status" className="text-sm text-[#d4af37]">
+                  {feedback}
+                </p>
+              )}
+
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="flex-1 rounded-lg bg-[#d4af37] px-4 py-3 font-semibold text-black transition hover:bg-[#ffe680] disabled:opacity-50"
+                >
+                  {saving ? "Guardando..." : "Guardar cambios"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setEditing(false)}
+                  className="rounded-lg border border-[#d4af37]/30 px-5 py-3 text-sm text-[#d4af37] transition hover:bg-[#d4af37]/10"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </section>
+        )}
+
+        {feedback && !editing && (
+          <p role="status" className="mt-4 text-sm text-[#d4af37]">
+            {feedback}
+          </p>
+        )}
+
+        {/* Publicaciones */}
+        <section className="mt-8">
+          <div className="mb-5 flex items-center justify-between">
+            <div>
+              <p className="text-xs tracking-[0.2em] text-[#d4af37]">
+                COMUNIDAD
               </p>
-            )}
-
-            <button
-              type="submit"
-              disabled={saving}
-              className="w-full rounded-lg bg-[#d4af37] px-4 py-3 font-semibold text-black transition hover:bg-[#ffe680] disabled:opacity-50"
-            >
-              {saving ? "Guardando..." : "Guardar cambios"}
-            </button>
-          </form>
-
-          <div className="mt-8 border-t border-[#d4af37]/15 pt-8">
-            <h2 className="mb-5 text-xl font-semibold text-[#f8f3e5]">
-              Mis publicaciones
-            </h2>
-
-            <UserPosts
-              userId={userId}
-              isOwner={true}
-              displayName={displayName || "Usuario"}
-              avatarUrl={avatarUrl}
-            />
+              <h2 className="mt-1 text-2xl font-semibold text-[#f8f3e5]">
+                Mis publicaciones
+              </h2>
+            </div>
           </div>
 
-          <div className="mt-8 border-t border-[#d4af37]/15 pt-6">
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="text-sm text-red-400 transition hover:text-red-300"
-            >
-              Cerrar sesión
-            </button>
-          </div>
+          <UserPosts
+            userId={userId}
+            isOwner={true}
+            displayName={displayName || "Usuario"}
+            avatarUrl={avatarUrl}
+          />
         </section>
       </div>
     </main>

@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import ProfileTabs from "./ProfileTabs";
 
-export const instant = false; 
+export const instant = false;
 
 type PublicProfile = {
   id: string;
@@ -18,7 +18,6 @@ export default async function PublicUserProfile({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-
   const supabase = await createClient();
 
   const {
@@ -64,50 +63,80 @@ export default async function PublicUserProfile({
   }));
 
   const profile = data as PublicProfile;
-
   const displayName = profile.display_name || "Usuario";
 
   return (
-    <main className="min-h-screen bg-[#080706] px-6 py-12">
-      <div className="mx-auto w-full max-w-2xl">
-        <Link
-          href="/"
-          className="mb-8 inline-block text-sm text-[#a99e83] transition hover:text-[#d4af37]"
-        >
-          ← Volver al inicio
-        </Link>
+    <main className="min-h-screen bg-[#080706] px-4 py-8 sm:px-6 sm:py-12">
+      <div className="mx-auto w-full max-w-4xl">
+        <div className="mb-8 flex items-center justify-between gap-4">
+          <Link
+            href="/"
+            className="text-sm text-[#a99e83] transition hover:text-[#d4af37]"
+          >
+            ← Volver al inicio
+          </Link>
 
-        <section className="rounded-2xl border border-[#d4af37]/20 bg-[#15120a] p-8 text-center shadow-2xl">
-          <p className="mb-8 text-sm tracking-[0.3em] text-[#d4af37]">
+          <span className="text-right text-xs tracking-[0.2em] text-[#d4af37]">
             CHARLOTTE WESSELS ARGENTINA
-          </p>
+          </span>
+        </div>
 
-          {profile.avatar_url ? (
-            <img
-              src={profile.avatar_url}
-              alt={`Foto de perfil de ${displayName}`}
-              className="mx-auto mb-5 h-28 w-28 rounded-full border-2 border-[#d4af37] object-cover"
-            />
-          ) : (
-            <div className="mx-auto mb-5 flex h-28 w-28 items-center justify-center rounded-full border-2 border-[#d4af37] bg-black/40 text-4xl font-semibold text-[#ffe680]">
-              {displayName.charAt(0).toUpperCase()}
+        {/* Encabezado del perfil público */}
+        <section className="overflow-hidden rounded-xl border border-[#d4af37]/20 bg-gradient-to-br from-[#19150e] to-[#0d0b08] shadow-xl">
+          <div className="h-1 bg-gradient-to-r from-transparent via-[#d4af37] to-transparent" />
+
+          <div className="p-5 sm:p-7">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 items-center gap-4 sm:gap-5">
+                {profile.avatar_url ? (
+                  <img
+                    src={profile.avatar_url}
+                    alt={`Foto de perfil de ${displayName}`}
+                    className="h-20 w-20 shrink-0 rounded-full border-2 border-[#d4af37] object-cover sm:h-24 sm:w-24"
+                  />
+                ) : (
+                  <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-full border-2 border-[#d4af37] bg-black/40 text-3xl font-semibold text-[#ffe680] sm:h-24 sm:w-24">
+                    {displayName.charAt(0).toUpperCase()}
+                  </div>
+                )}
+
+                <div className="min-w-0">
+                  <p className="mb-1 text-[10px] tracking-[0.25em] text-[#d4af37]">
+                    CHARLOTTE WESSELS ARGENTINA
+                  </p>
+
+                  <h1 className="break-words text-2xl font-semibold text-[#f8f3e5] sm:text-3xl">
+                    {displayName}
+                  </h1>
+
+                  <p className="mt-1 text-xs text-[#a99e83]">
+                    Miembro de la comunidad
+                  </p>
+                </div>
+              </div>
+
+              {isOwner && (
+                <Link
+                  href="/perfil"
+                  className="inline-flex w-fit items-center justify-center rounded-lg bg-[#d4af37] px-4 py-2.5 text-sm font-semibold text-black transition hover:bg-[#ffe680]"
+                >
+                  Editar perfil
+                </Link>
+              )}
             </div>
-          )}
 
-          <h1 className="text-3xl font-semibold text-[#f8f3e5]">
-            {displayName}
-          </h1>
+            <div className="mt-5 border-t border-[#d4af37]/15 pt-4">
+              <p className="mb-2 text-[10px] font-semibold tracking-[0.2em] text-[#d4af37]">
+                SOBRE MÍ
+              </p>
 
-          <div className="mx-auto mt-6 max-w-lg border-t border-[#d4af37]/15 pt-6">
-            <p className="mb-3 text-xs tracking-widest text-[#d4af37]">
-              SOBRE MÍ
-            </p>
-
-            <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-[#a99e83]">
-              {profile.bio || "Este usuario todavía no agregó una biografía."}
-            </p>
+              <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-[#c1b69e]">
+                {profile.bio || "Este usuario todavía no agregó una biografía."}
+              </p>
+            </div>
           </div>
         </section>
+
         <ProfileTabs
           signatures={signatures}
           userId={profile.id}
