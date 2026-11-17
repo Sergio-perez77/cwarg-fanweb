@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
+import ProfileTabs from "./ProfileTabs";
 
 export const instant = false; 
 
@@ -80,6 +81,7 @@ export default async function PublicUserProfile({
             </p>
           </div>
         </section>
+        <ProfileTabs />
       </div>
     </main>
   );
