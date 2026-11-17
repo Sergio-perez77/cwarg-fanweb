@@ -4,7 +4,15 @@ import { useState } from "react";
 
 type Tab = "Inicio" | "Publicaciones" | "Playlists" | "Firmas";
 
-export default function ProfileTabs() {
+type Signature = {
+  id: string;
+  display_name: string;
+  message: string;
+  created_at: string;
+  member_name: string;
+};
+
+export default function ProfileTabs({ signatures }: { signatures: Signature[] }) {
   const [activeTab, setActiveTab] = useState<Tab>("Inicio");
 
   const tabs: Tab[] = [
@@ -130,9 +138,36 @@ export default function ProfileTabs() {
             )}
 
             {activeTab === "Firmas" && (
-                <p className="text-sm text-[#a99e83]">
-                Aquí aparecerán las firmas realizadas a los integrantes.
-                </p>
+                <div className="space-y-4">
+                    {signatures.length === 0 ? (
+                    <div className="rounded-xl border border-dashed border-[#d4af37]/20 bg-black/20 p-8 text-center">
+                        <p className="text-sm text-[#a99e83]">
+                        Todavía no hay firmas aprobadas de este usuario.
+                        </p>
+                    </div>
+                    ) : (
+                    signatures.map((signature) => (
+                        <article
+                        key={signature.id}
+                        className="rounded-xl border border-[#d4af37]/20 bg-black/30 p-5"
+                        >
+                        <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-[#f8f3e5]">
+                            {signature.message}
+                        </p>
+
+                        <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-[#d4af37]/15 pt-3">
+                            <span className="text-sm text-[#d4af37]">
+                            Para {signature.member_name}
+                            </span>
+
+                            <time className="text-xs text-[#a99e83]">
+                            {new Date(signature.created_at).toLocaleDateString("es-AR")}
+                            </time>
+                        </div>
+                        </article>
+                    ))
+                    )}
+                </div>
             )}
         </div>
     </section>

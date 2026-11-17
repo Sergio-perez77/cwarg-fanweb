@@ -36,6 +36,27 @@ export default async function PublicUserProfile({
     notFound();
   }
 
+  const { data: signatureData } = await supabase
+    .from("member_signatures")
+    .select(`
+      id,
+      display_name,
+      message,
+      created_at,
+      band_members ( name )
+    `)
+    .eq("user_id", id)
+    .eq("status", "approved")
+    .order("created_at", { ascending: false });
+
+  const signatures = (signatureData ?? []).map((item: any) => ({
+    id: item.id,
+    display_name: item.display_name,
+    message: item.message,
+    created_at: item.created_at,
+    member_name: item.band_members?.name ?? "Integrante",
+  }));
+
   const profile = data as PublicProfile;
 
   const displayName = profile.display_name || "Usuario";
@@ -81,7 +102,7 @@ export default async function PublicUserProfile({
             </p>
           </div>
         </section>
-        <ProfileTabs />
+        <ProfileTabs signatures={signatures} />
       </div>
     </main>
   );
