@@ -21,6 +21,12 @@ export default async function PublicUserProfile({
 
   const supabase = await createClient();
 
+  const {
+    data: { user: currentUser },
+  } = await supabase.auth.getUser();
+
+  const isOwner = currentUser?.id === id;
+
   const { data, error } = await supabase
     .from("profiles")
     .select("id, display_name, avatar_url, bio")
@@ -102,7 +108,13 @@ export default async function PublicUserProfile({
             </p>
           </div>
         </section>
-        <ProfileTabs signatures={signatures} />
+        <ProfileTabs
+          signatures={signatures}
+          userId={profile.id}
+          displayName={displayName}
+          avatarUrl={profile.avatar_url}
+          isOwner={isOwner}
+        />
       </div>
     </main>
   );

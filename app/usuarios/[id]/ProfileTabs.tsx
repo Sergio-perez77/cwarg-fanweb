@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import UserPosts from "@/app/components/UserPosts";
+
 
 type Tab = "Inicio" | "Publicaciones" | "Playlists" | "Firmas";
 
@@ -12,7 +14,21 @@ type Signature = {
   member_name: string;
 };
 
-export default function ProfileTabs({ signatures }: { signatures: Signature[] }) {
+type ProfileTabsProps = {
+  signatures: Signature[];
+  userId: string;
+  displayName: string;
+  avatarUrl: string | null;
+  isOwner: boolean;
+};
+
+export default function ProfileTabs({
+  signatures,
+  userId,
+  displayName,
+  avatarUrl,
+  isOwner,
+}: ProfileTabsProps) {
   const [activeTab, setActiveTab] = useState<Tab>("Inicio");
 
   const tabs: Tab[] = [
@@ -74,19 +90,25 @@ export default function ProfileTabs({ signatures }: { signatures: Signature[] })
 
                 <section>
                     <div className="mb-4 flex items-center justify-between">
-                    <h3 className="text-lg font-semibold text-[#f8f3e5]">
+                        <h3 className="text-lg font-semibold text-[#f8f3e5]">
                         Publicaciones recientes
-                    </h3>
-                    <span className="text-xs text-[#d4af37]">
-                        Próximamente
-                    </span>
+                        </h3>
+
+                        <button
+                        type="button"
+                        onClick={() => setActiveTab("Publicaciones")}
+                        className="text-xs text-[#d4af37] hover:text-[#ffe680]"
+                        >
+                        Ver todas
+                        </button>
                     </div>
 
-                    <div className="rounded-xl border border-dashed border-[#d4af37]/20 bg-black/20 p-8 text-center">
-                    <p className="text-sm text-[#a99e83]">
-                        Aquí se mostrarán las últimas publicaciones de este usuario.
-                    </p>
-                    </div>
+                    <UserPosts
+                        userId={userId}
+                        isOwner={isOwner}
+                        displayName={displayName}
+                        avatarUrl={avatarUrl}
+                    />
                 </section>
 
                 <section>
@@ -126,9 +148,12 @@ export default function ProfileTabs({ signatures }: { signatures: Signature[] })
             )}
 
             {activeTab === "Publicaciones" && (
-                <p className="text-sm text-[#a99e83]">
-                Aquí aparecerán las publicaciones del usuario.
-                </p>
+                <UserPosts
+                    userId={userId}
+                    isOwner={isOwner}
+                    displayName={displayName}
+                    avatarUrl={avatarUrl}
+                />
             )}
 
             {activeTab === "Playlists" && (

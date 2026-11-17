@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import UserPosts from "@/app/components/UserPosts";
 
 type Profile = {
   display_name: string | null;
@@ -21,6 +22,7 @@ export default function ProfilePage() {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [feedback, setFeedback] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userId, setUserId] = useState("");
 
   useEffect(() => {
     async function loadProfile() {
@@ -36,6 +38,7 @@ export default function ProfilePage() {
       }
 
       setIsLoggedIn(true);
+      setUserId(user.id);
 
       const { data, error } = await supabase
         .from("profiles")
@@ -360,6 +363,19 @@ export default function ProfilePage() {
               {saving ? "Guardando..." : "Guardar cambios"}
             </button>
           </form>
+
+          <div className="mt-8 border-t border-[#d4af37]/15 pt-8">
+            <h2 className="mb-5 text-xl font-semibold text-[#f8f3e5]">
+              Mis publicaciones
+            </h2>
+
+            <UserPosts
+              userId={userId}
+              isOwner={true}
+              displayName={displayName || "Usuario"}
+              avatarUrl={avatarUrl}
+            />
+          </div>
 
           <div className="mt-8 border-t border-[#d4af37]/15 pt-6">
             <button
