@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { notFound } from "next/navigation";
 import ProfileTabs from "./ProfileTabs";
+import RoleStars from "@/app/components/RoleStars";
 
 export const instant = false;
 
@@ -64,6 +65,18 @@ export default async function PublicUserProfile({
 
   const profile = data as PublicProfile;
   const displayName = profile.display_name || "Usuario";
+  const { data: rolesData, error: rolesError } = await supabase.rpc(
+  "get_public_user_roles",
+  { _user_ids: [id] }
+);
+
+if (rolesError) {
+  console.error("Error al cargar roles del perfil:", rolesError.message);
+}
+
+const userRoles = (rolesData ?? []).map(
+  (item: { user_id: string; role: string }) => item.role
+);
 
   return (
     <main className="min-h-screen bg-[#080706] px-4 py-8 sm:px-6 sm:py-12">
@@ -107,6 +120,7 @@ export default async function PublicUserProfile({
 
                   <h1 className="break-words text-2xl font-semibold text-[#f8f3e5] sm:text-3xl">
                     {displayName}
+                    <RoleStars roles={userRoles} />
                   </h1>
 
                   <p className="mt-1 text-xs text-[#a99e83]">

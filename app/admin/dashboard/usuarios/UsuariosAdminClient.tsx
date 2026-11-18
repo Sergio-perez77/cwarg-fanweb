@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import RoleStars from "@/app/components/RoleStars";
 
 type SiteUser = {
   user_id: string;
@@ -155,6 +156,7 @@ export default function UsuariosAdminClient() {
                   <div className="min-w-0 flex-1">
                     <strong className="block break-words">
                       {user.display_name || "Sin nombre"}
+                      <RoleStars roles={user.roles} />
                     </strong>
 
                     <p className="mt-1 break-all text-sm opacity-70">

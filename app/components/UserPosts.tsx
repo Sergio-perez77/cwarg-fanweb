@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
+import RoleStars from "@/app/components/RoleStars";
 
 type UserPost = {
   id: string;
@@ -41,33 +42,50 @@ export default function UserPosts({
 }: UserPostsProps) {
   const [posts, setPosts] = useState<UserPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userRoles, setUserRoles] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [caption, setCaption] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [feedback, setFeedback] = useState("");
 
   const loadPosts = useCallback(async () => {
-    setLoading(true);
+  setLoading(true);
 
-    const supabase = createClient();
+  const supabase = createClient();
 
-    const { data, error } = await supabase
-      .from("user_posts")
-      .select(
-        "id, user_id, media_url, media_path, media_type, caption, created_at"
-      )
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
+  const { data, error } = await supabase
+    .from("user_posts")
+    .select(
+      "id, user_id, media_url, media_path, media_type, caption, created_at"
+    )
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error("Error al cargar publicaciones:", error.message);
-      setFeedback("No se pudieron cargar las publicaciones.");
-    } else {
-      setPosts((data ?? []) as UserPost[]);
-    }
+  if (error) {
+    console.error("Error al cargar publicaciones:", error.message);
+    setFeedback("No se pudieron cargar las publicaciones.");
+  } else {
+    setPosts((data ?? []) as UserPost[]);
+  }
 
-    setLoading(false);
+  const { data: rolesData, error: rolesError } = await supabase.rpc(
+  "get_public_user_roles",
+  { _user_ids: [userId] }
+  );
+
+  if (rolesError) {
+    console.error("Error al cargar distintivos:", rolesError.message);
+    setUserRoles([]);
+  } else {
+    setUserRoles(
+      (rolesData ?? []).map((item: { user_id: string; role: string }) => item.role)
+    );
+  }
+
+  setLoading(false);
   }, [userId]);
+
+  
 
   useEffect(() => {
     void loadPosts();
@@ -352,6 +370,7 @@ export default function UserPosts({
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-[#f8f3e5]">
                     {displayName}
+                    <RoleStars roles={userRoles} />
                   </p>
                   <time className="text-xs text-[#a99e83]">
                     {new Date(post.created_at).toLocaleDateString("es-AR", {

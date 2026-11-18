@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import RoleStars from "@/app/components/RoleStars";
 
 type Signature = {
   id: string;
+  user_id: string;
   display_name: string;
   message: string;
   created_at: string;
@@ -17,6 +19,7 @@ type Props = {
 export default function MemberSignatures({ memberId }: Props) {
   const [signatures, setSignatures] = useState<Signature[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userRoles, setUserRoles] = useState<Record<string, string[]>>({});
   const [authLoading, setAuthLoading] = useState(true);
   const [userId, setUserId] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -53,7 +56,7 @@ export default function MemberSignatures({ memberId }: Props) {
 
       const { data, error } = await supabase
         .from("member_signatures")
-        .select("id, display_name, message, created_at")
+        .select("id, user_id, display_name, message, created_at")
         .eq("member_id", memberId)
         .eq("status", "approved")
         .order("created_at", { ascending: false });
@@ -61,7 +64,39 @@ export default function MemberSignatures({ memberId }: Props) {
       if (error) {
         console.error("Error al cargar las firmas:", error.message);
       } else if (active) {
-        setSignatures(data ?? []);
+        const loadedSignatures = data ?? [];
+        setSignatures(loadedSignatures);
+
+        const userIds = [
+          ...new Set(
+            loadedSignatures
+              .map((signature) => signature.user_id)
+              .filter((id): id is string => Boolean(id))
+          ),
+        ];
+
+        if (userIds.length > 0) {
+          const { data: rolesData, error: rolesError } = await supabase.rpc(
+            "get_public_user_roles",
+            { _user_ids: userIds }
+          );
+
+          if (rolesError) {
+            console.error("Error al cargar distintivos:", rolesError.message);
+          } else if (active) {
+            const rolesMap: Record<string, string[]> = {};
+
+          for (const item of rolesData ?? []) {
+            if (!rolesMap[item.user_id]) {
+              rolesMap[item.user_id] = [];
+            }
+
+            rolesMap[item.user_id].push(item.role);
+          }
+
+            setUserRoles(rolesMap);
+          }
+        }
       }
 
       if (active) {
@@ -175,7 +210,16 @@ export default function MemberSignatures({ memberId }: Props) {
           signatures.map((signature) => (
             <article key={signature.id}>
               <p>{signature.message}</p>
-              <strong>{signature.display_name}</strong>
+              <strong>
+                {signature.display_name}
+                <RoleStars
+                  roles={
+                    signature.user_id
+                      ? userRoles[signature.user_id] ?? []
+                      : []
+                  }
+                />
+              </strong>
               <time>
                 {new Date(signature.created_at).toLocaleDateString("es-AR")}
               </time>

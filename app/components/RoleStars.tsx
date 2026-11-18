@@ -3,7 +3,7 @@ type RoleStarsProps = {
 };
 
 export default function RoleStars({ roles = [] }: RoleStarsProps) {
-  if (roles.includes("superadmin")) {
+  if (roles?.includes("superadmin")) {
     return (
       <span
         title="Superadministrador"
@@ -15,7 +15,7 @@ export default function RoleStars({ roles = [] }: RoleStarsProps) {
     );
   }
 
-  if (roles.includes("admin")) {
+  if (roles?.includes("admin")) {
     return (
       <span
         title="Administrador"
