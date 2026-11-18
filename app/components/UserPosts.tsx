@@ -50,6 +50,11 @@ export default function UserPosts({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [feedback, setFeedback] = useState("");
 
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const [editCaption, setEditCaption] = useState("");
+  const [editSelectedFile, setEditSelectedFile] = useState<File | null>(null);
+  const [savingEdit, setSavingEdit] = useState(false);
+
   const loadPosts = useCallback(async () => {
   setLoading(true);
 
@@ -114,6 +119,152 @@ export default function UserPosts({
     }
 
     setSelectedFile(file);
+  }
+
+    function startEditing(post: UserPost) {
+    setEditingPostId(post.id);
+    setEditCaption(post.caption ?? "");
+    setEditSelectedFile(null);
+    setFeedback("");
+  }
+
+  function cancelEditing() {
+    setEditingPostId(null);
+    setEditCaption("");
+    setEditSelectedFile(null);
+  }
+
+  async function handleSaveEdit(post: UserPost) {
+  if (!isOwner || savingEdit) return;
+
+  if (editCaption.trim().length > 500) {
+    setFeedback("El texto no puede superar los 500 caracteres.");
+    return;
+  }
+
+  setSavingEdit(true);
+  setFeedback("");
+
+  const supabase = createClient();
+
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
+  if (authError || !user || user.id !== userId) {
+    setFeedback("Tu sesión no es válida.");
+    setSavingEdit(false);
+    return;
+  }
+
+  const updates: {
+    caption: string | null;
+    media_url?: string;
+    media_path?: string;
+    media_type?: "image" | "video";
+  } = {
+    caption: editCaption.trim() || null,
+  };
+
+  let newFilePath: string | null = null;
+
+  if (editSelectedFile) {
+    const extension = editSelectedFile.name.split(".").pop() || "file";
+    const safeFileName = editSelectedFile.name
+      .replace(/\.[^/.]+$/, "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-zA-Z0-9_-]/g, "-")
+      .slice(0, 60);
+
+    newFilePath = `${user.id}/${Date.now()}-${crypto.randomUUID()}-${safeFileName}.${extension}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("user-posts")
+      .upload(newFilePath, editSelectedFile, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: editSelectedFile.type,
+      });
+
+    if (uploadError) {
+      setFeedback("No se pudo subir el nuevo archivo.");
+      setSavingEdit(false);
+      return;
+    }
+
+    const { data: publicUrlData } = supabase.storage
+      .from("user-posts")
+      .getPublicUrl(newFilePath);
+
+    updates.media_url = publicUrlData.publicUrl;
+    updates.media_path = newFilePath;
+    updates.media_type = editSelectedFile.type.startsWith("image/")
+      ? "image"
+      : "video";
+  }
+
+  const { error: updateError } = await supabase
+    .from("user_posts")
+    .update(updates)
+    .eq("id", post.id)
+    .eq("user_id", user.id);
+
+  if (updateError) {
+    if (newFilePath) {
+      await supabase.storage.from("user-posts").remove([newFilePath]);
+    }
+
+    console.error("Error al editar publicación:", updateError.message);
+    setFeedback("No se pudieron guardar los cambios.");
+    setSavingEdit(false);
+    return;
+  }
+
+  if (newFilePath && post.media_path) {
+    const { error: removeError } = await supabase.storage
+      .from("user-posts")
+      .remove([post.media_path]);
+
+    if (removeError) {
+      console.error("Error al eliminar archivo anterior:", removeError.message);
+      setFeedback(
+        "La publicación se actualizó, pero no se pudo eliminar el archivo anterior."
+      );
+    } else {
+      setFeedback("Publicación actualizada correctamente.");
+    }
+  } else {
+    setFeedback("Publicación actualizada correctamente.");
+  }
+
+    cancelEditing();
+    await loadPosts();
+    setSavingEdit(false);
+  }
+
+    function handleEditFileChange(event: ChangeEvent<HTMLInputElement>) {
+  const file = event.target.files?.[0] ?? null;
+
+  setFeedback("");
+  setEditSelectedFile(null);
+
+  if (!file) return;
+
+  if (!ALLOWED_TYPES.includes(file.type)) {
+    setFeedback("Formato no válido. Usá JPG, PNG, WebP, GIF, MP4, WebM o MOV.");
+    event.target.value = "";
+    return;
+  }
+
+  if (file.size > MAX_FILE_SIZE) {
+    setFeedback("El archivo no puede superar los 50 MB.");
+    event.target.value = "";
+    return;
+  }
+
+    setEditSelectedFile(file);
   }
 
   async function handleUpload(event: FormEvent<HTMLFormElement>) {
@@ -384,14 +535,24 @@ export default function UserPosts({
                 </div>
 
                 {isOwner && (
-                  <button
-                    type="button"
-                    onClick={() => void handleDelete(post)}
-                    className="text-xs text-red-400 transition hover:text-red-300"
-                  >
-                    Eliminar
-                  </button>
-                )}
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => startEditing(post)}
+                      className="rounded-lg border border-slate-600 px-3 py-1 text-sm hover:bg-slate-700"
+                    >
+                      Editar
+                    </button>
+
+                      <button
+                        type="button"
+                        onClick={() => void handleDelete(post)}
+                        className="rounded-lg border border-red-500/50 px-3 py-1 text-sm text-red-400 hover:bg-red-500/10"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  )}
               </div>
 
               {post.media_type === "image" ? (
@@ -417,6 +578,72 @@ export default function UserPosts({
                   {post.caption}
                 </p>
               )}
+
+                {isOwner && editingPostId === post.id && (
+                  <div className="space-y-4 border-t border-[#d4af37]/20 p-4">
+                    <h4 className="font-semibold text-[#d4af37]">
+                      Editar publicación
+                    </h4>
+
+                    <div>
+                      <label className="mb-2 block text-sm text-[#f8f3e5]">
+                        Texto de la publicación
+                      </label>
+
+                      <textarea
+                        value={editCaption}
+                        onChange={(event) => setEditCaption(event.target.value)}
+                        maxLength={500}
+                        rows={3}
+                        className="w-full rounded-lg border border-[#d4af37]/25 bg-black/40 p-3 text-sm text-white"
+                      />
+
+                      <p className="mt-1 text-right text-xs text-[#a99e83]">
+                        {editCaption.length}/500 caracteres
+                      </p>
+                    </div>
+
+                      <div>
+                        <label className="mb-2 block text-sm text-[#f8f3e5]">
+                          Reemplazar foto o video (opcional)
+                        </label>
+
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime"
+                          onChange={handleEditFileChange}
+                          className="block w-full text-sm text-[#a99e83]"
+                        />
+
+                        {editSelectedFile && (
+                          <p className="mt-2 text-xs text-[#d4af37]">
+                            Archivo: {editSelectedFile.name}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex gap-3">
+                        <button
+                          type="button"
+                          onClick={() => void handleSaveEdit(post)}
+                          disabled={savingEdit}
+                          className="rounded-lg bg-[#d4af37] px-4 py-2 text-sm font-semibold text-black disabled:opacity-50"
+                        >
+                          {savingEdit ? "Guardando..." : "Guardar cambios"}
+                        </button>
+
+                      <button
+                        type="button"
+                        onClick={cancelEditing}
+                        disabled={savingEdit}
+                        className="rounded-lg border border-slate-600 px-4 py-2 text-sm text-white"
+                      >
+                        Cancelar
+                      </button>
+                      </div>
+                  </div>
+                )}
+
                <ReactionBar
                   targetType="user_post"
                   targetId={post.id}
