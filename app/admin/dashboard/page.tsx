@@ -84,6 +84,13 @@ async function DashboardContent() {
       available: true,
     },
     {
+      title: "Sanciones",
+      description: "Aplicar y administrar restricciones temporales de usuarios.",
+      icon: "⚖",
+      href: "/admin/dashboard/sanciones",
+      available: true,
+    },
+    {
       title: "Usuarios",
       description: "Gestionar cuentas y permisos.",
       icon: "♙",
@@ -255,6 +262,8 @@ async function DashboardContent() {
                       ? "Administrar discos →"
                       : section.title === "Usuarios"
                       ? "Gestionar usuarios →"
+                      : section.title === "Sanciones"
+                      ? "Administrar sanciones →"
                       : "Próximamente"}
                     </span>
                   </div>
