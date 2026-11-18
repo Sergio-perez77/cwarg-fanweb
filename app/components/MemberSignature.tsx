@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import RoleStars from "@/app/components/RoleStars";
+import ReactionBar from "@/app/components/ReactionBar";
 
 type Signature = {
   id: string;
@@ -223,6 +224,10 @@ export default function MemberSignatures({ memberId }: Props) {
               <time>
                 {new Date(signature.created_at).toLocaleDateString("es-AR")}
               </time>
+              <ReactionBar
+                targetType="signature"
+                targetId={signature.id}
+              />
             </article>
           ))
         )}

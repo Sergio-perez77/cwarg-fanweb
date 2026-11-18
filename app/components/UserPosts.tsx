@@ -5,6 +5,7 @@ import type { ChangeEvent, FormEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
 import RoleStars from "@/app/components/RoleStars";
 import SocialComments from "@/app/components/SocialComments";
+import ReactionBar from "@/app/components/ReactionBar";
 
 type UserPost = {
   id: string;
@@ -416,10 +417,15 @@ export default function UserPosts({
                   {post.caption}
                 </p>
               )}
-               <SocialComments
-              targetType="user_post"
-              targetId={post.id}
-            />
+               <ReactionBar
+                  targetType="user_post"
+                  targetId={post.id}
+                />
+
+                <SocialComments
+                  targetType="user_post"
+                  targetId={post.id}
+                />
             </article>
            
           ))}

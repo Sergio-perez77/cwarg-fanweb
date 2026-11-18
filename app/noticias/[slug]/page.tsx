@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
+import ReactionBar from "@/app/components/ReactionBar";
+import SocialComments from "@/app/components/SocialComments";
 
 type NewsItem = {
   id: string;
@@ -208,6 +210,16 @@ export default async function NewsDetailPage({ params }: Props) {
               );
             })}
           </div>
+
+          <ReactionBar
+            targetType="news"
+            targetId={news.id}
+          />
+
+          <SocialComments
+            targetType="news"
+            targetId={news.id}
+          />
         </article>
       </div>
     </main>

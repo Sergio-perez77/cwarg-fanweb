@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import RoleStars from "@/app/components/RoleStars";
+import ReactionBar from "@/app/components/ReactionBar";
 
 type SocialComment = {
   id: string;
@@ -314,6 +315,10 @@ export default function SocialComments({
           ) : (
             <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-[#f8f3e5]">
               {comment.body}
+              <ReactionBar
+                targetType="comment"
+                targetId={comment.id}
+              />
             </p>
           )}
 
