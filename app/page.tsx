@@ -227,7 +227,7 @@ useEffect(() => {
             <a href="#inicio">Inicio</a>
             <a href="#biografia">Biografía</a>
             <a href="#noticias">Noticias</a>
-            <a href="#musica">Música</a>
+            <Link href="/discografia">Discografía</Link>
             <a href="#multimedia">Multimedia</a>
           </nav>
 
@@ -531,11 +531,14 @@ useEffect(() => {
 
             <div className="empty-content">
               <span className="empty-symbol">♫</span>
-              <h3>LA MÚSICA, EN UN SOLO LUGAR</h3>
+              <h3>EXPLORÁ SU DISCOGRAFÍA</h3>
               <p>
-                Próximamente: álbumes, canciones, proyectos y una biblioteca
-                musical organizada.
+                Descubrí sus álbumes, canciones, información y galerías
+                en un espacio dedicado a su trayectoria musical.
               </p>
+              <Link href="/discografia" className="button-primary">
+                VER DISCOGRAFÍA <span>↗</span>
+              </Link>
             </div>
           </section>
 

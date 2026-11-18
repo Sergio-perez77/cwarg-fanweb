@@ -87,6 +87,7 @@ async function DashboardContent() {
       title: "Usuarios",
       description: "Gestionar cuentas y permisos.",
       icon: "♙",
+      href: "/admin/dashboard/usuarios",
       available: isSuperAdmin,
     },
     {
@@ -252,6 +253,8 @@ async function DashboardContent() {
                       ? "Administrar comentarios →"
                       : section.title === "Discografía"
                       ? "Administrar discos →"
+                      : section.title === "Usuarios"
+                      ? "Gestionar usuarios →"
                       : "Próximamente"}
                     </span>
                   </div>
