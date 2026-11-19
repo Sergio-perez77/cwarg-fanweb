@@ -41,6 +41,7 @@ const [currentUser, setCurrentUser] = useState<{
 } | null>(null);
 
 const [authLoading, setAuthLoading] = useState(true);
+const [canAccessAdmin, setCanAccessAdmin] = useState(false);
 const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 const [userSearch, setUserSearch] = useState("");
 const [userResults, setUserResults] = useState<
@@ -69,6 +70,24 @@ useEffect(() => {
       .select("display_name, avatar_url")
       .eq("id", user.id)
       .maybeSingle();
+
+      const { data: rolesData, error: rolesError } = await supabase.rpc(
+        "get_public_user_roles",
+        { _user_ids: [user.id] }
+      );
+
+      if (rolesError) {
+        console.error("Error al consultar permisos:", rolesError.message);
+        setCanAccessAdmin(false);
+      } else {
+        const hasAdminRole = (rolesData ?? []).some(
+          (item: { user_id: string; role: string }) =>
+            item.user_id === user.id &&
+            (item.role === "admin" || item.role === "superadmin")
+        );
+
+        setCanAccessAdmin(hasAdminRole);
+      }
 
     if (isMounted) {
       setCurrentUser({
@@ -303,6 +322,16 @@ useEffect(() => {
 
                     <div className="user-menu-divider" />
 
+                    {canAccessAdmin && (
+                      <Link
+                        href="/admin/dashboard"
+                        className="user-menu-option"
+                        onClick={() => setIsUserMenuOpen(false)}
+                      >
+                        Panel administrativo
+                      </Link>
+                    )}
+
                     <Link
                       href="/perfil"
                       className="user-menu-option"
@@ -317,6 +346,7 @@ useEffect(() => {
                       onClick={async () => {
                         await supabase.auth.signOut();
                         setCurrentUser(null);
+                        setCanAccessAdmin(false);
                         setIsUserMenuOpen(false);
                         window.location.reload();
                       }}

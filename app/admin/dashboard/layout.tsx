@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { connection } from "next/server";
 
 export const instant = false;
 
@@ -8,6 +9,7 @@ export default async function AdminDashboardLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  await connection();
   const supabase = await createClient();
 
   const {

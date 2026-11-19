@@ -109,6 +109,15 @@ async function DashboardContent() {
     <main className="min-h-screen bg-[#080706] text-[#f8f3e5]">
       <div className="flex min-h-screen flex-col md:flex-row">
         <aside className="w-full border-b border-[#d4af37]/20 bg-[#100e09] p-5 md:w-72 md:border-b-0 md:border-r md:p-6">
+
+            <Link
+                href="/"
+                className="mb-6 inline-flex items-center gap-2 text-sm text-[#a99e83] transition hover:text-[#d4af37]"
+              >
+                <span aria-hidden="true">←</span>
+                Volver a la página principal
+              </Link>
+
           <div className="mb-10">
             <p className="text-xs tracking-[0.3em] text-[#d4af37]">
               CHARLOTTE WESSELS

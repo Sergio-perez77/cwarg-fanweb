@@ -313,13 +313,16 @@ export default function SocialComments({
               </div>
             </div>
           ) : (
-            <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-[#f8f3e5]">
-              {comment.body}
+            <div>
+              <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-[#f8f3e5]">
+                {comment.body}
+              </p>
+
               <ReactionBar
                 targetType="comment"
                 targetId={comment.id}
               />
-            </p>
+            </div>
           )}
 
           <div className="mt-3 flex flex-wrap gap-4">
