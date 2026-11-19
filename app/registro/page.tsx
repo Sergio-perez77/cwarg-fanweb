@@ -9,6 +9,8 @@ export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [pendingEmail, setPendingEmail] = useState("");
+  const [resendMessage, setResendMessage] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [captchaToken, setCaptchaToken] = useState("");
   const [captchaKey, setCaptchaKey] = useState(0);
@@ -76,6 +78,8 @@ export default function RegisterPage() {
         "¡Registro realizado! Revisá tu correo electrónico y confirmá tu cuenta desde el enlace que te enviamos."
       );
 
+      setPendingEmail(cleanEmail);
+
       setName("");
       setEmail("");
       setPassword("");
@@ -87,6 +91,37 @@ export default function RegisterPage() {
       setLoading(false);
       setCaptchaToken("");
       setCaptchaKey((current) => current + 1);
+    }
+  }
+
+  async function handleResendConfirmation() {
+  if (!pendingEmail) return;
+
+  setResendMessage("");
+  setLoading(true);
+
+  try {
+    const supabase = createClient();
+
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: pendingEmail,
+    });
+
+    if (error) {
+      setResendMessage(
+        "No se pudo reenviar el correo. Intentá nuevamente."
+      );
+      return;
+    }
+
+    setResendMessage(
+      "¡Nuevo correo enviado! Revisá tu bandeja de entrada."
+    );
+    } catch {
+      setResendMessage("Ocurrió un error al reenviar el correo.");
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -194,9 +229,28 @@ export default function RegisterPage() {
           )}
 
           {success && (
-            <p role="status" className="rounded-lg border border-green-500/30 bg-green-500/10 p-3 text-sm text-green-300">
-              {success}
-            </p>
+            <div className="space-y-3">
+              <p role="status" className="rounded-lg border border-green-500/30 bg-green-500/10 p-3 text-sm text-green-300">
+                {success}
+              </p>
+
+              {pendingEmail && (
+                <button
+                  type="button"
+                  onClick={handleResendConfirmation}
+                  disabled={loading}
+                  className="w-full rounded-lg border border-[#d4af37]/40 px-4 py-3 text-sm text-[#d4af37] hover:bg-[#d4af37]/10 disabled:opacity-50"
+                >
+                  {loading ? "Enviando..." : "Reenviar correo de confirmación"}
+                </button>
+              )}
+
+              {resendMessage && (
+                <p role="status" className="text-sm text-[#d4af37]">
+                  {resendMessage}
+                </p>
+              )}
+            </div>
           )}
 
           <button
