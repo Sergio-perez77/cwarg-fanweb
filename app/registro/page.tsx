@@ -11,6 +11,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [pendingEmail, setPendingEmail] = useState("");
   const [resendMessage, setResendMessage] = useState("");
+  const [resendEmail, setResendEmail] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [captchaToken, setCaptchaToken] = useState("");
   const [captchaKey, setCaptchaKey] = useState(0);
@@ -95,7 +96,12 @@ export default function RegisterPage() {
   }
 
   async function handleResendConfirmation() {
-  if (!pendingEmail) return;
+  const cleanEmail = resendEmail.trim();
+
+  if (!cleanEmail) {
+    setResendMessage("Ingresá tu correo electrónico.");
+    return;
+  }
 
   setResendMessage("");
   setLoading(true);
@@ -105,19 +111,19 @@ export default function RegisterPage() {
 
     const { error } = await supabase.auth.resend({
       type: "signup",
-      email: pendingEmail,
+      email: cleanEmail,
     });
 
     if (error) {
       setResendMessage(
-        "No se pudo reenviar el correo. Intentá nuevamente."
+        "No se pudo reenviar el correo. Revisá el correo ingresado e intentá nuevamente."
       );
       return;
     }
 
-    setResendMessage(
-      "¡Nuevo correo enviado! Revisá tu bandeja de entrada."
-    );
+      setResendMessage(
+        "Solicitud realizada. Si la cuenta necesita confirmación, revisá tu bandeja de entrada."
+      );
     } catch {
       setResendMessage("Ocurrió un error al reenviar el correo.");
     } finally {
@@ -261,6 +267,40 @@ export default function RegisterPage() {
             {loading ? "Creando cuenta..." : "Registrarme"}
           </button>
         </form>
+
+        <div className="mt-8 space-y-3 border-t border-[#d4af37]/20 pt-6">
+          <h2 className="text-lg font-semibold text-[#f8f3e5]">
+            ¿No recibiste el correo?
+          </h2>
+
+          <p className="text-sm text-[#a99e83]">
+            Si ya te registraste y todavía no confirmaste tu cuenta, ingresá tu correo para solicitar otro mensaje.
+          </p>
+
+          <input
+            type="email"
+            value={resendEmail}
+            onChange={(event) => setResendEmail(event.target.value)}
+            placeholder="correo@ejemplo.com"
+            autoComplete="email"
+            className="w-full rounded-lg border border-[#d4af37]/25 bg-black/40 px-4 py-3 text-white outline-none focus:border-[#d4af37]"
+          />
+
+          <button
+            type="button"
+            onClick={handleResendConfirmation}
+            disabled={loading || !resendEmail.trim()}
+            className="w-full rounded-lg border border-[#d4af37]/40 px-4 py-3 text-sm text-[#d4af37] hover:bg-[#d4af37]/10 disabled:opacity-50"
+          >
+            {loading ? "Enviando..." : "Reenviar correo de confirmación"}
+          </button>
+
+          {resendMessage && (
+            <p role="status" className="text-sm text-[#d4af37]">
+              {resendMessage}
+            </p>
+          )}
+        </div>
 
         <p className="mt-8 text-center text-sm text-[#a99e83]">
           ¿Ya tenés una cuenta?{" "}
